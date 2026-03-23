@@ -1,0 +1,109 @@
+=== COMPREHENSIVE DIAGNOSTIC & PUSH REPORT ===
+
+Generated: 2026-03-23T10:41:01.261Z
+Directory: C:\Users\maxim\ClaudeOS\Content\deploy
+
+
+--- Git Remote Configuration ---
+Error: Command failed: git remote -v
+'git' is not recognized as an internal or external command,
+operable program or batch file.
+
+Code: undefined
+Stderr: 'git' is not recognized as an internal or external command,
+operable program or batch file.
+
+
+--- Git Status ---
+Error: Command failed: git status
+'git' is not recognized as an internal or external command,
+operable program or batch file.
+
+Code: undefined
+Stderr: 'git' is not recognized as an internal or external command,
+operable program or batch file.
+
+
+--- Git Branches ---
+Error: Command failed: git branch -a
+'git' is not recognized as an internal or external command,
+operable program or batch file.
+
+Code: undefined
+Stderr: 'git' is not recognized as an internal or external command,
+operable program or batch file.
+
+
+--- Git Log (last 5 commits) ---
+Error: Command failed: git log --oneline -5
+'git' is not recognized as an internal or external command,
+operable program or batch file.
+
+Code: undefined
+Stderr: 'git' is not recognized as an internal or external command,
+operable program or batch file.
+
+
+--- Git Config (remotes only) ---
+Error: Command failed: git config --list | findstr remote
+'git' is not recognized as an internal or external command,
+operable program or batch file.
+
+Code: undefined
+Stderr: 'git' is not recognized as an internal or external command,
+operable program or batch file.
+
+
+--- Local HTML/MD Files ---
+CRITICAL-BLOCKER.md                3250 bytes  2026-03-23T10:32:48.584Z
+DEBUGGING-REPORT.md                4103 bytes  2026-03-23T10:30:07.036Z
+DEPLOYMENT-STATUS.md               3117 bytes  2026-03-23T10:23:41.956Z
+README.md                          1991 bytes  2026-03-23T10:29:16.089Z
+captions-only.html                 8190 bytes  2026-03-23T09:59:26.151Z
+commit_message.txt                   37 bytes  2026-03-19T20:37:31.220Z
+commit_msg.txt                       54 bytes  2026-03-23T09:17:36.612Z
+current_index.html               129796 bytes  2026-03-23T09:35:13.221Z
+diagnostic_output.txt                42 bytes  2026-03-23T10:40:43.153Z
+gh_output.txt                         0 bytes  2026-03-19T19:55:00.042Z
+git-error.txt                         0 bytes  2026-03-23T10:09:19.506Z
+git-output.txt                      948 bytes  2026-03-23T10:10:19.386Z
+git-status-output.txt                 0 bytes  2026-03-23T10:13:16.989Z
+git-status.txt                      884 bytes  2026-03-23T10:00:30.403Z
+index-debug.html                   3965 bytes  2026-03-23T10:23:16.492Z
+index.html                         3965 bytes  2026-03-23T10:29:00.775Z
+index_from_git.html              129796 bytes  2026-03-23T09:23:02.781Z
+push-test-2026-03-23.txt            397 bytes  2026-03-23T10:30:17.975Z
+simple-test.html                    438 bytes  2026-03-23T10:19:06.834Z
+standalone.html                  130147 bytes  2026-03-23T09:19:19.680Z
+test-react.html                     847 bytes  2026-03-23T09:58:52.603Z
+test_output.txt                   21214 bytes  2026-03-23T09:21:59.679Z
+
+--- Attempting Git Push ---
+Push attempt failed:
+Error: Command failed: git push -v 2>&1
+git : The term 'git' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ git push -v 2>&1
++ ~~~
+    + CategoryInfo          : ObjectNotFound: (git:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+
+Code: undefined
+Stderr: git : The term 'git' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the 
+spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ git push -v 2>&1
++ ~~~
+    + CategoryInfo          : ObjectNotFound: (git:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+
+
+--- GitHub CLI Status ---
+GitHub CLI: gh version 2.88.1 (2026-03-12)
+https://github.com/cli/cli/releases/tag/v2.88.1
+GitHub CLI not working: Command failed: .\gh_cli\bin\gh.exe auth status
+You are not logged into any GitHub hosts. To log in, run: gh auth login
+
