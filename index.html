@@ -1,92 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Dashboard - Debug</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .error-box { background: #fee; border: 2px solid #f00; padding: 20px; margin: 10px; border-radius: 5px; }
-        .success-box { background: #efe; border: 2px solid #0a0; padding: 20px; margin: 10px; border-radius: 5px; }
-        .debug-log { font-family: monospace; font-size: 12px; background: #f5f5f5; padding: 10px; margin: 10px; max-height: 300px; overflow-y: auto; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.24.0/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
 </head>
-<body>
-    <div id="root"></div>
-    <div id="debug-logs" class="debug-log"></div>
-    
-    <script type="text/babel">
-        // Debug logging
-        const logs = [];
-        const debugDiv = document.getElementById('debug-logs');
-        
-        function logDebug(message) {
-            logs.push(message);
-            console.log('[DEBUG]', message);
-            debugDiv.innerHTML = logs.map(l => `<div>${l}</div>`).join('');
+<body id="root" class="bg-gray-50"></body>
+
+  <script type="text/babel">
+    const TABS = [
+      { id: 'ideas',           label: 'Ideas',           file: 'content-ideas.json' },
+      { id: 'analyzed',        label: 'Analyzed',        file: 'content-analyzed.json' },
+      { id: 'titles',          label: 'Titles',          file: 'content-titles.json' },
+      { id: 'title_analyzer',  label: 'Title Analyzer',  file: 'content-title-analyzer.json' },
+      { id: 'captions',        label: 'Captions',        file: 'content-captions.json' },
+      { id: 'carousels',       label: 'Carousels',       file: 'content-carousels.json' },
+      { id: 'feed',            label: 'Feed',            file: 'content-feed.json' },
+      { id: 'improver',        label: 'Improver',        file: 'content-improver.json' },
+    ];
+
+    const POLL_INTERVAL_MS = 30000;
+
+    async function fetchAllData() {
+      const results = {};
+      await Promise.all(
+        TABS.map(async tab => {
+          try {
+            const response = await fetch(tab.file);
+            if (response.ok) {
+              results[tab.id] = await response.json();
+              return;
+            }
+          } catch (e) {
+            console.error(`Failed to fetch ${tab.file}:`, e);
+          }
+        })
+      );
+      return results;
+    }
+
+    function App() {
+      const [activeTab, setActiveTab]     = React.useState('ideas');
+      const [data, setData]               = React.useState(() => Object.fromEntries(TABS.map(t => [t.id, []])));
+      const [lastSync, setLastSync]       = React.useState(null);
+      const [polling, setPolling]         = React.useState(false);
+      const [loadError, setLoadError]     = React.useState(null);
+
+      React.useEffect(() => {
+        async function load() {
+          try {
+            setPolling(true);
+            const result = await fetchAllData();
+            if (Object.keys(result).length > 0) {
+              setData(result);
+              setLoadError(null);
+            }
+            setLastSync(Date.now());
+          } catch (error) {
+            setLoadError(error.message);
+            console.error('Data load error:', error);
+          } finally {
+            setPolling(false);
+          }
         }
-        
-        logDebug('Script loaded');
-        logDebug('React version: ' + React.version);
-        logDebug('ReactDOM version: ' + typeof ReactDOM);
-        
-        // Check if root element exists
-        const rootDiv = document.getElementById('root');
-        logDebug('Root div found: ' + (rootDiv ? 'YES' : 'NO'));
-        
-        // Simple test component
-        function App() {
-            logDebug('App component rendering');
-            return (
-                <div className="p-8 bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
-                    <div className="success-box">
-                        <h1 className="text-3xl font-bold mb-4">✅ Dashboard Loaded Successfully!</h1>
-                        <p className="text-lg">If you can see this, React is working correctly.</p>
-                        <p className="text-sm mt-4 text-gray-600">
-                            Timestamp: {new Date().toLocaleString()}
-                        </p>
-                    </div>
-                    
-                    <div className="mt-8 p-6 bg-white rounded-lg shadow">
-                        <h2 className="text-2xl font-bold mb-4">System Status</h2>
-                        <div className="space-y-2 font-mono text-sm">
-                            <div>✓ HTML loaded</div>
-                            <div>✓ React: {React.version}</div>
-                            <div>✓ ReactDOM loaded</div>
-                            <div>✓ Babel transpiler working</div>
-                            <div>✓ Tailwind CSS loaded</div>
-                            <div>✓ Component rendered</div>
-                        </div>
-                    </div>
+
+        load();
+        const timer = setInterval(load, POLL_INTERVAL_MS);
+        return () => clearInterval(timer);
+      }, []);
+
+      const activeData = data[activeTab] || [];
+      const rowCounts = React.useMemo(
+        () => Object.fromEntries(TABS.map(t => [t.id, (data[t.id] ?? []).length])),
+        [data]
+      );
+
+      return (
+        <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-8">
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">Content Dashboard</h1>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span>Status: {polling ? '🔄 Syncing...' : '✓ Connected'}</span>
+                {lastSync && <span>Last sync: {new Date(lastSync).toLocaleTimeString()}</span>}
+              </div>
+              {loadError && (
+                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
+                  ⚠️ {loadError}
                 </div>
-            );
-        }
-        
-        logDebug('Creating React root');
-        
-        try {
-            const root = ReactDOM.createRoot(rootDiv);
-            logDebug('React root created');
-            
-            root.render(<App />);
-            logDebug('App component rendered to root');
-        } catch (error) {
-            logDebug('ERROR: ' + error.message);
-            logDebug('Stack: ' + error.stack);
-            rootDiv.innerHTML = '<div class="error-box"><h1>ERROR</h1><p>' + error.message + '</p></div>';
-        }
-        
-        // Global error handler
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            logDebug('RUNTIME ERROR: ' + msg);
-            logDebug('File: ' + url + ':' + lineNo + ':' + columnNo);
-            return false;
-        };
-        
-        logDebug('Debug setup complete');
-    </script>
+              )}
+            </div>
+
+            <div className="mb-6 overflow-x-auto bg-white rounded-lg shadow">
+              <div className="flex border-b">
+                {TABS.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 px-4 py-3 text-center font-medium border-b-2 transition whitespace-nowrap ${
+                      activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {tab.label} <span className="text-xs ml-1 opacity-70">({rowCounts[tab.id]})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              {activeData.length > 0 ? (
+                activeData.map((item, idx) => (
+                  <div key={idx} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {Object.entries(item).map(([key, value]) => (
+                        <div key={key}>
+                          <span className="text-xs font-semibold text-gray-500 uppercase">{key}</span>
+                          <p className="text-gray-800 mt-1 line-clamp-3">{String(value).substring(0, 250)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-white rounded-lg shadow p-12 text-center">
+                  <p className="text-gray-500 mb-2">Loading content from JSON files...</p>
+                  <p className="text-xs text-gray-400">Attempting to load: {TABS.map(t => t.file).join(', ')}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
