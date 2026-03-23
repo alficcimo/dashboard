@@ -9,23 +9,9 @@
   <script src="https://unpkg.com/@babel/standalone@7.24.0/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Wait for Babel to load, then manually transpile the JSX script
-    window.addEventListener('DOMContentLoaded', () => {
-      const scripts = document.querySelectorAll('script[type="text/babel"]');
-      scripts.forEach(script => {
-        try {
-          const result = Babel.transform(script.textContent, {
-            presets: ['react']
-          });
-          const newScript = document.createElement('script');
-          newScript.type = 'text/javascript';
-          newScript.textContent = result.code;
-          script.parentNode.replaceChild(newScript, script);
-        } catch (e) {
-          console.error('Babel transpilation error:', e);
-        }
-      });
-    });
+    // Store reference to babel scripts before they're executed
+    const babelScripts = Array.from(document.querySelectorAll('script[type="text/babel"]'));
+    console.log('Found ' + babelScripts.length + ' babel scripts');
   </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -39,7 +25,7 @@
     }
   </script>
 
-  <script type="text/babel" data-presets="react">
+  <script id="app-code" type="text/babel-app">
 
     /* === COLUMN DEFINITIONS === */
 
@@ -398,6 +384,23 @@
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
 
+  </script>
+
+  <script>
+    // Transpile and execute the Babel app code
+    (function() {
+      const appScript = document.getElementById('app-code');
+      if (appScript && window.Babel) {
+        try {
+          const transpiledCode = Babel.transform(appScript.textContent, {
+            presets: ['react']
+          }).code;
+          eval(transpiledCode);
+        } catch (e) {
+          console.error('Error transpiling app code:', e);
+        }
+      }
+    })();
   </script>
 </body>
 </html>
