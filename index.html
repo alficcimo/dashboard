@@ -387,7 +387,7 @@
   </script>
 
   <script>
-    // Transpile and execute the Babel app code
+    // Transpile and execute the Babel app code by creating a new script element
     (function() {
       const appScript = document.getElementById('app-code');
       if (appScript && window.Babel) {
@@ -395,9 +395,14 @@
           const transpiledCode = Babel.transform(appScript.textContent, {
             presets: ['react']
           }).code;
-          eval(transpiledCode);
+          
+          // Create a new script element and add it to the DOM
+          const newScript = document.createElement('script');
+          newScript.type = 'text/javascript';
+          newScript.textContent = transpiledCode;
+          document.body.appendChild(newScript);
         } catch (e) {
-          console.error('Error transpiling app code:', e);
+          console.error('Babel transpilation error:', e.message);
         }
       }
     })();
