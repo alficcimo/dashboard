@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <title>React Test</title>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    function App() {
+      return (
+        <div style={{padding: '20px', backgroundColor: '#f0f0f0'}}>
+          <h1>✓ React is working!</h1>
+          <p>If you see this message, React rendering is functioning correctly.</p>
+          <p>Test data: {JSON.stringify({captions: ['Открою вам ужас']})}</p>
+        </div>
+      );
+    }
+    
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
