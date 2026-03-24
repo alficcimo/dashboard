@@ -2,12 +2,18 @@
 import subprocess
 import os
 import sys
+from datetime import datetime
+import io
+
+# Set UTF-8 output encoding
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 os.chdir('C:\\Users\\maxim\\ClaudeOS\\Content\\deploy')
 
 try:
     print("Adding files to git...")
-    subprocess.run(['git', 'add', 'index.html', 'standalone.html', 'captions-only.html', 'test-react.html'], check=True)
+    subprocess.run(['git', 'add', '.'], check=True)
     print("✓ Files added")
     
     print("Checking git status...")
@@ -16,7 +22,8 @@ try:
     print(result.stdout)
     
     print("Creating commit...")
-    subprocess.run(['git', 'commit', '-m', 'Fix: Add diagnostic React test files and simplified captions dashboard'], check=True)
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    subprocess.run(['git', 'commit', '-m', f'Auto-deploy: Update content files [{timestamp}]'], check=True)
     print("✓ Commit created")
     
     print("Pushing to GitHub...")

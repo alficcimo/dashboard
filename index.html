@@ -13,7 +13,7 @@
   <script>
     const COLUMN_DEFS = {
       ideas:          ['date','source','idea'],
-      analyzed:       ['idea','psychology','energy','king','magic_pill','summary'],
+      analyzed:       ['date','idea','psychology','energy','king','magic_pill','summary'],
       titles:         ['date','title'],
       title_analyzer: ['date','original_title','improved_title','issues_found','virality_after','changes_made'],
       captions:       ['date','title','caption'],
@@ -38,7 +38,11 @@
       { id: 'feed',           label: 'Feed Analyzer',  file: 'content-feed.json' },
       { id: 'improver',       label: 'Improver',       file: 'content-improver.json' }
     ];
-    const POLL_INTERVAL_MS = 30000;
+    
+    // Polling interval: configurable via URL parameter (?interval=5000), defaults to 30 seconds
+    const DEFAULT_POLL_INTERVAL_MS = 30000;
+    const urlParams = new URLSearchParams(window.location.search);
+    const POLL_INTERVAL_MS = parseInt(urlParams.get('interval')) || DEFAULT_POLL_INTERVAL_MS;
 
     async function fetchAllData() {
       const results = {};
@@ -54,7 +58,7 @@
 
     const e = React.createElement;
 
-    function SyncIndicator({ lastSync, polling }) {
+    function SyncIndicator({ lastSync, polling, pollInterval }) {
       const [elapsed, setElapsed] = React.useState(0);
       React.useEffect(() => {
         if (!lastSync) return;
@@ -63,11 +67,12 @@
       }, [lastSync]);
       if (!lastSync) return e('span', {className: 'text-xs text-gray-400'}, polling ? 'Loading...' : 'No connection');
       const color = elapsed < 35 ? 'text-green-600' : elapsed < 70 ? 'text-yellow-600' : 'text-red-500';
+      const pollIntervalSeconds = pollInterval ? Math.round(pollInterval / 1000) : 30;
       return e('span', {className: 'text-xs font-medium flex items-center gap-1 ' + color},
         e('span', {className: 'inline-block w-2 h-2 rounded-full bg-current'}),
         elapsed < 5 ? 'Just updated' : 'Updated ' + elapsed + 's ago',
         ' \u00b7 ',
-        e('span', {className: 'text-gray-400 font-normal'}, 'auto-refresh every 30s')
+        e('span', {className: 'text-gray-400 font-normal'}, 'auto-refresh every ' + pollIntervalSeconds + 's')
       );
     }
 
@@ -224,7 +229,7 @@
             e('h1', {className:'text-lg font-bold text-gray-800'}, 'Content Farm Dashboard'),
             e('p',  {className:'text-xs text-gray-500'}, '@novaya_energia \u2014 Max Kibrik')
           ),
-          e(SyncIndicator, {lastSync, polling})
+          e(SyncIndicator, {lastSync, polling, pollInterval: POLL_INTERVAL_MS})
         ),
         e(TabBar, {activeTab, rowCounts, onTabChange: setActiveTab}),
         TABS.map(tab => activeTab === tab.id
