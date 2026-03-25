@@ -23,7 +23,6 @@
       captions:       ['date','title','caption','feedback'],
       carousels:      ['title','carousel','caption_under'],
       feed:           ['date','title','views'],
-      improver:       ['social_url','original_title','improved_title','issues_found','virality_before','virality_after','changes_made','status']
     };
     const MULTILINE_COLS = new Set(['caption','original_caption','improved_caption',
       'carousel','caption_under','caption_preview',
@@ -40,7 +39,6 @@
       { id: 'carousels',      label: 'Carousels',      file: 'content-carousels.json' },
       { id: 'feed',           label: 'Feed Analyzer',  file: 'content-feed.json' },
       { id: 'caption_analyzer', label: 'Caption Analyzer', file: 'content-caption-analysis.json' },
-      { id: 'improver',       label: 'Improver',       file: 'content-improver.json' }
     ];
     
     // Polling interval: configurable via URL parameter (?interval=5000), defaults to 30 seconds
