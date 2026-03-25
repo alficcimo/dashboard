@@ -135,7 +135,7 @@
       );
     }
 
-    function DataTable({ tabId, rows, isManual, onClearManual, feedback, setFeedback }) {
+    function DataTable({ tabId, rows, isManual, onClearManual, feedback, setFeedback, onDislike }) {
       const columns = COLUMN_DEFS[tabId] || [];
       const headerCells = [
         e('th', {key:'#', className:'px-3 py-2 text-left font-semibold text-gray-600 border border-gray-300 bg-gray-100 whitespace-nowrap text-xs'}, '#')
@@ -160,7 +160,7 @@
                     ),
                     e('label', {className:'flex items-center gap-1 cursor-pointer'},
                       e('input', {type:'radio', name:'feedback-'+i, value:'dislike', checked: currentFeedback === 'dislike',
-                        onChange: () => setFeedback({...feedback, [rowKey]: 'dislike'}), className:'cursor-pointer'}),
+                        onChange: () => onDislike ? onDislike(rowKey, row) : setFeedback({...feedback, [rowKey]: 'dislike'}), className:'cursor-pointer'}),
                       e('span', {className:'text-lg'}, '👎')
                     )
                   )
@@ -191,7 +191,7 @@
       return uploaded.filter(r => !seen.has(JSON.stringify(r))).concat(live);
     }
 
-    function TabPanel({ tabId, liveRows, feedback, setFeedback }) {
+    function TabPanel({ tabId, liveRows, feedback, setFeedback, onDislike }) {
       const [merged, setMerged] = React.useState(null);
       const [error,  setError]  = React.useState(null);
       const manualRef           = React.useRef(null);
@@ -204,7 +204,7 @@
       const isManual = merged != null;
       return e('div', null,
         e(DropZone,  {onLoad: handleUpload, error, setError}),
-        e(DataTable, {tabId, rows, isManual, onClearManual: handleClear, feedback, setFeedback})
+        e(DataTable, {tabId, rows, isManual, onClearManual: handleClear, feedback, setFeedback, onDislike: tabId === 'captions' ? onDislike : null})
       );
     }
 
@@ -214,7 +214,13 @@
       const [lastSync,  setLastSync]  = React.useState(null);
       const [polling,   setPolling]   = React.useState(false);
       const [isLocal,   setIsLocal]   = React.useState(false);
-      const [feedback,  setFeedback]  = React.useState({});
+      const [feedback,  setFeedback]  = React.useState(() => {
+        try { return JSON.parse(localStorage.getItem('caption_feedback') || '{}'); } catch(e) { return {}; }
+      });
+
+      React.useEffect(() => {
+        localStorage.setItem('caption_feedback', JSON.stringify(feedback));
+      }, [feedback]);
 
       React.useEffect(() => { if (window.location.protocol === 'file:') setIsLocal(true); }, []);
 
@@ -247,8 +253,9 @@
         return disliked;
       }, [data.captions, feedback]);
 
-      const exportDislikedCaptions = () => {
-        const json = JSON.stringify(dislikedCaptions, null, 2);
+      const exportDislikedCaptions = (captionsList) => {
+        const list = captionsList || dislikedCaptions;
+        const json = JSON.stringify(list, null, 2);
         const blob = new Blob([json], {type: 'application/json'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -256,6 +263,17 @@
         a.download = 'content-captions-disliked.json';
         a.click();
         URL.revokeObjectURL(url);
+      };
+
+      const handleDislike = (rowKey, row) => {
+        const newFeedback = {...feedback, [rowKey]: 'dislike'};
+        setFeedback(newFeedback);
+        const newDisliked = (data.captions || []).reduce((acc, r) => {
+          const k = JSON.stringify(r);
+          if (newFeedback[k] === 'dislike') acc.push({date: r.date, original_caption: r.caption, title: r.title, needs_improvement: true});
+          return acc;
+        }, []);
+        exportDislikedCaptions(newDisliked);
       };
 
       if (isLocal) {
@@ -275,13 +293,13 @@
             e('p',  {className:'text-xs text-gray-500'}, '@novaya_energia \u2014 Max Kibrik')
           ),
           e('div', {className:'flex gap-3 items-center'},
-            activeTab === 'captions' && dislikedCaptions.length > 0 ? e('button', {onClick: exportDislikedCaptions, className:'text-xs bg-amber-100 text-amber-800 hover:bg-amber-200 px-3 py-1.5 rounded font-medium'}, `Export Disliked (${dislikedCaptions.length})`) : null,
+            dislikedCaptions.length > 0 ? e('button', {onClick: () => exportDislikedCaptions(), className:'text-xs bg-amber-500 text-white hover:bg-amber-600 px-3 py-1.5 rounded font-medium'}, `📥 Export Disliked (${dislikedCaptions.length})`) : null,
             e(SyncIndicator, {lastSync, polling, pollInterval: POLL_INTERVAL_MS})
           )
         ),
         e(TabBar, {activeTab, rowCounts, onTabChange: setActiveTab}),
         TABS.map(tab => activeTab === tab.id
-          ? e(TabPanel, {key: tab.id, tabId: tab.id, liveRows: data[tab.id]||[], feedback, setFeedback})
+          ? e(TabPanel, {key: tab.id, tabId: tab.id, liveRows: data[tab.id]||[], feedback, setFeedback, onDislike: handleDislike})
           : null
         )
       );
