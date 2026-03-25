@@ -232,6 +232,28 @@
         const c = {}; TABS.forEach(t => c[t.id] = (data[t.id]||[]).length); return c;
       }, [data]);
 
+      const dislikedCaptions = React.useMemo(() => {
+        const disliked = [];
+        (data.captions || []).forEach(row => {
+          const rowKey = JSON.stringify(row);
+          if (feedback[rowKey] === 'dislike') {
+            disliked.push({date: row.date, original_caption: row.caption, title: row.title, needs_improvement: true});
+          }
+        });
+        return disliked;
+      }, [data.captions, feedback]);
+
+      const exportDislikedCaptions = () => {
+        const json = JSON.stringify(dislikedCaptions, null, 2);
+        const blob = new Blob([json], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'content-captions-disliked.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
       if (isLocal) {
         return e('div', {className:'min-h-screen bg-gray-50 flex items-center justify-center'},
           e('div', {className:'bg-white rounded-xl shadow p-10 max-w-md text-center'},
@@ -248,7 +270,10 @@
             e('h1', {className:'text-lg font-bold text-gray-800'}, 'Content Farm Dashboard'),
             e('p',  {className:'text-xs text-gray-500'}, '@novaya_energia \u2014 Max Kibrik')
           ),
-          e(SyncIndicator, {lastSync, polling, pollInterval: POLL_INTERVAL_MS})
+          e('div', {className:'flex gap-3 items-center'},
+            activeTab === 'captions' && dislikedCaptions.length > 0 ? e('button', {onClick: exportDislikedCaptions, className:'text-xs bg-amber-100 text-amber-800 hover:bg-amber-200 px-3 py-1.5 rounded font-medium'}, `Export Disliked (${dislikedCaptions.length})`) : null,
+            e(SyncIndicator, {lastSync, polling, pollInterval: POLL_INTERVAL_MS})
+          )
         ),
         e(TabBar, {activeTab, rowCounts, onTabChange: setActiveTab}),
         TABS.map(tab => activeTab === tab.id
