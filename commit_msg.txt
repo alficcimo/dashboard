@@ -1,1 +1,1 @@
-Update dashboard with new sci-fi author style captions
+Update Caption Analyzer with caption-specific columns and data
