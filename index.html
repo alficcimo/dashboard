@@ -209,7 +209,7 @@
     }
 
     function App() {
-      const [activeTab, setActiveTab] = React.useState('ideas');
+      const [activeTab, setActiveTab] = React.useState(() => localStorage.getItem('activeTab') || 'ideas');
       const [data,      setData]      = React.useState(() => { const d={}; TABS.forEach(t=>d[t.id]=[]); return d; });
       const [lastSync,  setLastSync]  = React.useState(null);
       const [polling,   setPolling]   = React.useState(false);
@@ -223,6 +223,8 @@
       }, [feedback]);
 
       React.useEffect(() => { if (window.location.protocol === 'file:') setIsLocal(true); }, []);
+
+      const loadRef = React.useRef(null);
 
       React.useEffect(() => {
         if (isLocal) return;
@@ -241,13 +243,16 @@
               r.caption_analyzer = [...stillPending, ...analyzed];
               setData(r);
               setLastSync(Date.now());
+              const hasPending = stillPending.length > 0;
+              clearInterval(loadRef.current);
+              loadRef.current = setInterval(load, hasPending ? 5000 : POLL_INTERVAL_MS);
             })
             .catch(() => {})
             .finally(() => setPolling(false));
         }
         load();
-        const timer = setInterval(load, POLL_INTERVAL_MS);
-        return () => clearInterval(timer);
+        loadRef.current = setInterval(load, POLL_INTERVAL_MS);
+        return () => clearInterval(loadRef.current);
       }, [isLocal]);
 
       const rowCounts = React.useMemo(() => {
@@ -276,6 +281,8 @@
           const updated = [newEntry, ...pending];
           localStorage.setItem(PENDING_KEY, JSON.stringify(updated));
           setData(prev => ({...prev, caption_analyzer: [newEntry, ...(prev.caption_analyzer || [])]}));
+          clearInterval(loadRef.current);
+          loadRef.current = setInterval(() => {}, 5000);
         }
       };
 
@@ -300,7 +307,7 @@
             e(SyncIndicator, {lastSync, polling, pollInterval: POLL_INTERVAL_MS})
           )
         ),
-        e(TabBar, {activeTab, rowCounts, onTabChange: setActiveTab}),
+        e(TabBar, {activeTab, rowCounts, onTabChange: (id) => { setActiveTab(id); localStorage.setItem('activeTab', id); }}),
         TABS.map(tab => activeTab === tab.id
           ? e(TabPanel, {key: tab.id, tabId: tab.id, liveRows: data[tab.id]||[], feedback, setFeedback, onDislike: handleDislike})
           : null
