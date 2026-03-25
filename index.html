@@ -229,7 +229,19 @@
         function load() {
           setPolling(true);
           fetchAllData()
-            .then(r => { setData(r); setLastSync(Date.now()); })
+            .then(r => {
+              const pending = JSON.parse(localStorage.getItem('caption_analyzer_pending') || '[]');
+              const analyzed = r.caption_analyzer || [];
+              const stillPending = pending.filter(p =>
+                !analyzed.some(x => x.original_caption === p.original_caption && x.date === p.date)
+              );
+              if (stillPending.length !== pending.length) {
+                localStorage.setItem('caption_analyzer_pending', JSON.stringify(stillPending));
+              }
+              r.caption_analyzer = [...stillPending, ...analyzed];
+              setData(r);
+              setLastSync(Date.now());
+            })
             .catch(() => {})
             .finally(() => setPolling(false));
         }
@@ -246,12 +258,13 @@
         return (data.captions || []).filter(row => feedback[JSON.stringify(row)] === 'dislike');
       }, [data.captions, feedback]);
 
+      const PENDING_KEY = 'caption_analyzer_pending';
+
       const handleDislike = (rowKey, row) => {
         setFeedback(prev => ({...prev, [rowKey]: 'dislike'}));
-        setData(prev => {
-          const existing = prev.caption_analyzer || [];
-          const alreadyAdded = existing.some(r => r.original_caption === row.caption && r.date === row.date);
-          if (alreadyAdded) return prev;
+        const pending = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+        const alreadyAdded = pending.some(p => p.original_caption === row.caption && p.date === row.date);
+        if (!alreadyAdded) {
           const newEntry = {
             date: row.date,
             title: row.title || '',
@@ -260,8 +273,10 @@
             what_to_improve: '⏳ Ожидает анализа',
             improved_caption: '⏳ Ожидает анализа'
           };
-          return {...prev, caption_analyzer: [newEntry, ...existing]};
-        });
+          const updated = [newEntry, ...pending];
+          localStorage.setItem(PENDING_KEY, JSON.stringify(updated));
+          setData(prev => ({...prev, caption_analyzer: [newEntry, ...(prev.caption_analyzer || [])]}));
+        }
       };
 
       if (isLocal) {
