@@ -48,49 +48,6 @@
     const urlParams = new URLSearchParams(window.location.search);
     const POLL_INTERVAL_MS = parseInt(urlParams.get('interval')) || DEFAULT_POLL_INTERVAL_MS;
 
-    async function analyzeWithClaude(caption) {
-      const apiKey = localStorage.getItem('anthropic_api_key');
-      if (!apiKey) return null;
-      try {
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-            'anthropic-dangerous-direct-browser-access': 'true'
-          },
-          body: JSON.stringify({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 2048,
-            messages: [{role: 'user', content: `Ты анализатор капшенов для Instagram/TikTok аккаунта @novaya_energia (психология, энергия, отношения, высокостатусный мужчина).
-
-Проанализируй этот капшен по 8 факторам вирусности (0-100):
-1. Curiosity Gap - создаёт интригу?
-2. Emotional Trigger - вызывает сильную эмоцию?
-3. Specificity - есть конкретные числа/примеры?
-4. Contrast - разрушает ожидания?
-5. Audience Relevance - релевантно аудитории Макса?
-6. Brand Voice - стиль (психология+энергия+король+таблетка)?
-7. Action Clarity - есть чёткий CTA?
-8. Hook Power - первые строки цепляют?
-
-КАПШЕН:
-${caption}
-
-Верни ТОЛЬКО JSON без лишнего текста:
-{"virality_score":<число>,"weakest_factors":"<фактор1 (оценка)>, <фактор2 (оценка)>","what_to_improve":"<конкретно что улучшить в 1-2 предложения>","improved_caption":"<полностью переписанный капшен в стиле Макса: кинематографический зачин + 🔴 психологически: ... + ⚡ энергетически: ... + 👑 взгляд короля: ... + 💊 волшебная таблетка: ... + поляризующий вопрос + CTA с ТГ-каналом, ~1900 символов, без тире>"}`}]
-          })
-        });
-        const data = await res.json();
-        if (data.content && data.content[0]) {
-          const match = data.content[0].text.match(/\{[\s\S]*\}/);
-          if (match) return JSON.parse(match[0]);
-        }
-      } catch(e) {}
-      return null;
-    }
-
     async function fetchAllData() {
       const results = {};
       await Promise.all(TABS.map(async tab => {
@@ -178,7 +135,7 @@ ${caption}
       );
     }
 
-    function DataTable({ tabId, rows, isManual, onClearManual, feedback, setFeedback, onDislike }) {
+    function DataTable({ tabId, rows, isManual, onClearManual, feedback, setFeedback, onDislike, onLike }) {
       const columns = COLUMN_DEFS[tabId] || [];
       const headerCells = [
         e('th', {key:'#', className:'px-3 py-2 text-left font-semibold text-gray-600 border border-gray-300 bg-gray-100 whitespace-nowrap text-xs'}, '#')
@@ -197,8 +154,8 @@ ${caption}
                 return e('td', {key:col, className:'px-3 py-2 border border-gray-200 align-top'}, 
                   e('div', {className:'flex gap-3'},
                     e('label', {className:'flex items-center gap-1 cursor-pointer'},
-                      e('input', {type:'radio', name:'feedback-'+i, value:'like', checked: currentFeedback === 'like', 
-                        onChange: () => setFeedback({...feedback, [rowKey]: 'like'}), className:'cursor-pointer'}),
+                      e('input', {type:'radio', name:'feedback-'+i, value:'like', checked: currentFeedback === 'like',
+                        onChange: () => onLike ? onLike(rowKey, row) : setFeedback({...feedback, [rowKey]: 'like'}), className:'cursor-pointer'}),
                       e('span', {className:'text-lg'}, '👍')
                     ),
                     e('label', {className:'flex items-center gap-1 cursor-pointer'},
@@ -234,22 +191,7 @@ ${caption}
       return uploaded.filter(r => !seen.has(JSON.stringify(r))).concat(live);
     }
 
-    function ApiKeyBanner() {
-      const [key, setKey] = React.useState(localStorage.getItem('anthropic_api_key') || '');
-      const [saved, setSaved] = React.useState(!!localStorage.getItem('anthropic_api_key'));
-      function save() { localStorage.setItem('anthropic_api_key', key); setSaved(true); }
-      if (saved) return e('div', {className:'px-4 py-1.5 bg-green-50 border-b border-green-200 flex items-center justify-between'},
-        e('span', {className:'text-xs text-green-700'}, '✓ Claude API key set — analysis runs automatically on dislike'),
-        e('button', {onClick: () => { localStorage.removeItem('anthropic_api_key'); setSaved(false); setKey(''); }, className:'text-xs text-green-600 hover:text-green-800 underline'}, 'Remove')
-      );
-      return e('div', {className:'px-4 py-2 bg-yellow-50 border-b border-yellow-200 flex items-center gap-3'},
-        e('span', {className:'text-xs text-yellow-800 font-medium whitespace-nowrap'}, '⚡ Add Anthropic API key for instant analysis:'),
-        e('input', {type:'password', value:key, onChange: ev => setKey(ev.target.value), placeholder:'sk-ant-...', className:'flex-1 text-xs border border-yellow-300 rounded px-2 py-1 font-mono'}),
-        e('button', {onClick: save, disabled: !key, className:'text-xs bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 disabled:opacity-50'}, 'Save')
-      );
-    }
-
-    function TabPanel({ tabId, liveRows, feedback, setFeedback, onDislike }) {
+    function TabPanel({ tabId, liveRows, feedback, setFeedback, onDislike, onLike }) {
       const [merged, setMerged] = React.useState(null);
       const [error,  setError]  = React.useState(null);
       const manualRef           = React.useRef(null);
@@ -261,9 +203,10 @@ ${caption}
       const rows     = merged != null ? merged : liveRows;
       const isManual = merged != null;
       return e('div', null,
-        tabId === 'caption_analyzer' ? e(ApiKeyBanner) : null,
         e(DropZone,  {onLoad: handleUpload, error, setError}),
-        e(DataTable, {tabId, rows, isManual, onClearManual: handleClear, feedback, setFeedback, onDislike: tabId === 'captions' ? onDislike : null})
+        e(DataTable, {tabId, rows, isManual, onClearManual: handleClear, feedback, setFeedback,
+          onDislike: tabId === 'captions' ? onDislike : null,
+          onLike:    tabId === 'captions' ? onLike    : null})
       );
     }
 
@@ -336,17 +279,15 @@ ${caption}
           };
           localStorage.setItem(PENDING_KEY, JSON.stringify([newEntry, ...pending]));
           setData(prev => ({...prev, caption_analyzer: [newEntry, ...(prev.caption_analyzer || [])]}));
-
-          analyzeWithClaude(row.caption).then(analysis => {
-            const fill = analysis
-              ? {weakest_factors: analysis.weakest_factors, what_to_improve: analysis.what_to_improve, improved_caption: analysis.improved_caption}
-              : {weakest_factors: '❌ Нет API ключа', what_to_improve: 'Добавь Anthropic API key в настройках', improved_caption: '❌ Нет API ключа'};
-            const done = {...newEntry, ...fill};
-            const cur = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
-            localStorage.setItem(PENDING_KEY, JSON.stringify(cur.map(p => p.original_caption === row.caption && p.date === row.date ? done : p)));
-            setData(prev => ({...prev, caption_analyzer: (prev.caption_analyzer || []).map(p => p.original_caption === row.caption && p.date === row.date ? done : p)}));
-          });
         }
+      };
+
+      const handleLike = (rowKey, row) => {
+        setFeedback(prev => ({...prev, [rowKey]: 'like'}));
+        const cur = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+        const filtered = cur.filter(p => !(p.original_caption === row.caption && p.date === row.date));
+        localStorage.setItem(PENDING_KEY, JSON.stringify(filtered));
+        setData(prev => ({...prev, caption_analyzer: (prev.caption_analyzer || []).filter(p => !(p.original_caption === row.caption && p.date === row.date))}));
       };
 
       if (isLocal) {
@@ -371,7 +312,7 @@ ${caption}
         ),
         e(TabBar, {activeTab, rowCounts, onTabChange: (id) => { setActiveTab(id); localStorage.setItem('activeTab', id); }}),
         TABS.map(tab => activeTab === tab.id
-          ? e(TabPanel, {key: tab.id, tabId: tab.id, liveRows: data[tab.id]||[], feedback, setFeedback, onDislike: handleDislike})
+          ? e(TabPanel, {key: tab.id, tabId: tab.id, liveRows: data[tab.id]||[], feedback, setFeedback, onDislike: handleDislike, onLike: handleLike})
           : null
         )
       );
