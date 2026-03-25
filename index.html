@@ -25,8 +25,8 @@
       feed:           ['date','title','views'],
       improver:       ['social_url','original_title','improved_title','issues_found','virality_before','virality_after','changes_made','status']
     };
-    const MULTILINE_COLS = new Set(['caption', 
-      'caption','carousel','caption_under','caption_preview',
+    const MULTILINE_COLS = new Set(['caption','original_caption','improved_caption',
+      'carousel','caption_under','caption_preview',
       'reels_structure','carousel_slides','stories_hook','stories_cta',
       'adapted_hook','core_angle','reels_hook','carousel_hook','issues_found','changes_made'
     ]);
@@ -47,6 +47,49 @@
     const DEFAULT_POLL_INTERVAL_MS = 30000;
     const urlParams = new URLSearchParams(window.location.search);
     const POLL_INTERVAL_MS = parseInt(urlParams.get('interval')) || DEFAULT_POLL_INTERVAL_MS;
+
+    async function analyzeWithClaude(caption) {
+      const apiKey = localStorage.getItem('anthropic_api_key');
+      if (!apiKey) return null;
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 2048,
+            messages: [{role: 'user', content: `Ты анализатор капшенов для Instagram/TikTok аккаунта @novaya_energia (психология, энергия, отношения, высокостатусный мужчина).
+
+Проанализируй этот капшен по 8 факторам вирусности (0-100):
+1. Curiosity Gap - создаёт интригу?
+2. Emotional Trigger - вызывает сильную эмоцию?
+3. Specificity - есть конкретные числа/примеры?
+4. Contrast - разрушает ожидания?
+5. Audience Relevance - релевантно аудитории Макса?
+6. Brand Voice - стиль (психология+энергия+король+таблетка)?
+7. Action Clarity - есть чёткий CTA?
+8. Hook Power - первые строки цепляют?
+
+КАПШЕН:
+${caption}
+
+Верни ТОЛЬКО JSON без лишнего текста:
+{"virality_score":<число>,"weakest_factors":"<фактор1 (оценка)>, <фактор2 (оценка)>","what_to_improve":"<конкретно что улучшить в 1-2 предложения>","improved_caption":"<полностью переписанный капшен в стиле Макса: кинематографический зачин + 🔴 психологически: ... + ⚡ энергетически: ... + 👑 взгляд короля: ... + 💊 волшебная таблетка: ... + поляризующий вопрос + CTA с ТГ-каналом, ~1900 символов, без тире>"}`}]
+          })
+        });
+        const data = await res.json();
+        if (data.content && data.content[0]) {
+          const match = data.content[0].text.match(/\{[\s\S]*\}/);
+          if (match) return JSON.parse(match[0]);
+        }
+      } catch(e) {}
+      return null;
+    }
 
     async function fetchAllData() {
       const results = {};
@@ -191,6 +234,21 @@
       return uploaded.filter(r => !seen.has(JSON.stringify(r))).concat(live);
     }
 
+    function ApiKeyBanner() {
+      const [key, setKey] = React.useState(localStorage.getItem('anthropic_api_key') || '');
+      const [saved, setSaved] = React.useState(!!localStorage.getItem('anthropic_api_key'));
+      function save() { localStorage.setItem('anthropic_api_key', key); setSaved(true); }
+      if (saved) return e('div', {className:'px-4 py-1.5 bg-green-50 border-b border-green-200 flex items-center justify-between'},
+        e('span', {className:'text-xs text-green-700'}, '✓ Claude API key set — analysis runs automatically on dislike'),
+        e('button', {onClick: () => { localStorage.removeItem('anthropic_api_key'); setSaved(false); setKey(''); }, className:'text-xs text-green-600 hover:text-green-800 underline'}, 'Remove')
+      );
+      return e('div', {className:'px-4 py-2 bg-yellow-50 border-b border-yellow-200 flex items-center gap-3'},
+        e('span', {className:'text-xs text-yellow-800 font-medium whitespace-nowrap'}, '⚡ Add Anthropic API key for instant analysis:'),
+        e('input', {type:'password', value:key, onChange: ev => setKey(ev.target.value), placeholder:'sk-ant-...', className:'flex-1 text-xs border border-yellow-300 rounded px-2 py-1 font-mono'}),
+        e('button', {onClick: save, disabled: !key, className:'text-xs bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600 disabled:opacity-50'}, 'Save')
+      );
+    }
+
     function TabPanel({ tabId, liveRows, feedback, setFeedback, onDislike }) {
       const [merged, setMerged] = React.useState(null);
       const [error,  setError]  = React.useState(null);
@@ -203,6 +261,7 @@
       const rows     = merged != null ? merged : liveRows;
       const isManual = merged != null;
       return e('div', null,
+        tabId === 'caption_analyzer' ? e(ApiKeyBanner) : null,
         e(DropZone,  {onLoad: handleUpload, error, setError}),
         e(DataTable, {tabId, rows, isManual, onClearManual: handleClear, feedback, setFeedback, onDislike: tabId === 'captions' ? onDislike : null})
       );
@@ -271,18 +330,22 @@
         const alreadyAdded = pending.some(p => p.original_caption === row.caption && p.date === row.date);
         if (!alreadyAdded) {
           const newEntry = {
-            date: row.date,
-            title: row.title || '',
+            date: row.date, title: row.title || '',
             original_caption: row.caption,
-            weakest_factors: '⏳ Ожидает анализа',
-            what_to_improve: '⏳ Ожидает анализа',
-            improved_caption: '⏳ Ожидает анализа'
+            weakest_factors: '⏳ Анализирую...', what_to_improve: '⏳ Анализирую...', improved_caption: '⏳ Анализирую...'
           };
-          const updated = [newEntry, ...pending];
-          localStorage.setItem(PENDING_KEY, JSON.stringify(updated));
+          localStorage.setItem(PENDING_KEY, JSON.stringify([newEntry, ...pending]));
           setData(prev => ({...prev, caption_analyzer: [newEntry, ...(prev.caption_analyzer || [])]}));
-          clearInterval(loadRef.current);
-          loadRef.current = setInterval(() => {}, 5000);
+
+          analyzeWithClaude(row.caption).then(analysis => {
+            const fill = analysis
+              ? {weakest_factors: analysis.weakest_factors, what_to_improve: analysis.what_to_improve, improved_caption: analysis.improved_caption}
+              : {weakest_factors: '❌ Нет API ключа', what_to_improve: 'Добавь Anthropic API key в настройках', improved_caption: '❌ Нет API ключа'};
+            const done = {...newEntry, ...fill};
+            const cur = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+            localStorage.setItem(PENDING_KEY, JSON.stringify(cur.map(p => p.original_caption === row.caption && p.date === row.date ? done : p)));
+            setData(prev => ({...prev, caption_analyzer: (prev.caption_analyzer || []).map(p => p.original_caption === row.caption && p.date === row.date ? done : p)}));
+          });
         }
       };
 
@@ -303,7 +366,6 @@
             e('p',  {className:'text-xs text-gray-500'}, '@novaya_energia \u2014 Max Kibrik')
           ),
           e('div', {className:'flex gap-3 items-center'},
-            dislikedCaptions.length > 0 ? e('span', {className:'text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded'}, `👎 ${dislikedCaptions.length} in analyzer`) : null,
             e(SyncIndicator, {lastSync, polling, pollInterval: POLL_INTERVAL_MS})
           )
         ),
