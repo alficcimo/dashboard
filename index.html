@@ -16,7 +16,7 @@
       analyzed:       ['date','idea','psychology','energy','king','magic_pill','summary'],
       titles:         ['date','title'],
       title_analyzer: ['date','original_title','improved_title','issues_found','virality_after','changes_made'],
-      captions:       ['date','title','caption'],
+      captions:       ['date','title','caption','feedback'],
       carousels:      ['title','carousel','caption_under'],
       feed:           ['date','title','views'],
       improver:       ['social_url','original_title','improved_title','issues_found','virality_before','virality_after','changes_made','status']
@@ -131,23 +131,41 @@
       );
     }
 
-    function DataTable({ tabId, rows, isManual, onClearManual }) {
+    function DataTable({ tabId, rows, isManual, onClearManual, feedback, setFeedback }) {
       const columns = COLUMN_DEFS[tabId] || [];
       const headerCells = [
         e('th', {key:'#', className:'px-3 py-2 text-left font-semibold text-gray-600 border border-gray-300 bg-gray-100 whitespace-nowrap text-xs'}, '#')
       ].concat(columns.map(col =>
-        e('th', {key:col, className:'px-3 py-2 text-left font-semibold text-gray-600 border border-gray-300 bg-gray-100 whitespace-nowrap text-xs'}, col)
+        e('th', {key:col, className:'px-3 py-2 text-left font-semibold text-gray-600 border border-gray-300 bg-gray-100 whitespace-nowrap text-xs'}, col === 'feedback' ? '👍👎' : col)
       ));
       const bodyRows = rows.length === 0
         ? [e('tr', {key:'empty'}, e('td', {colSpan: columns.length+1, className:'px-3 py-8 text-center text-gray-400 text-sm'}, 'No data yet. Run the skill to populate this tab.'))]
         : rows.map((row, i) => {
+            const rowKey = JSON.stringify(row);
+            const currentFeedback = feedback[rowKey] || null;
             const cells = [
               e('td', {key:'#', className:'px-3 py-2 border border-gray-200 text-gray-400 text-xs select-none'}, i+1)
-            ].concat(columns.map(col =>
-              e('td', {key:col, className:'px-3 py-2 border border-gray-200 text-gray-800 align-top max-w-xs ' +
+            ].concat(columns.map(col => {
+              if (col === 'feedback') {
+                return e('td', {key:col, className:'px-3 py-2 border border-gray-200 align-top'}, 
+                  e('div', {className:'flex gap-3'},
+                    e('label', {className:'flex items-center gap-1 cursor-pointer'},
+                      e('input', {type:'radio', name:'feedback-'+i, value:'like', checked: currentFeedback === 'like', 
+                        onChange: () => setFeedback({...feedback, [rowKey]: 'like'}), className:'cursor-pointer'}),
+                      e('span', {className:'text-lg'}, '👍')
+                    ),
+                    e('label', {className:'flex items-center gap-1 cursor-pointer'},
+                      e('input', {type:'radio', name:'feedback-'+i, value:'dislike', checked: currentFeedback === 'dislike',
+                        onChange: () => setFeedback({...feedback, [rowKey]: 'dislike'}), className:'cursor-pointer'}),
+                      e('span', {className:'text-lg'}, '👎')
+                    )
+                  )
+                );
+              }
+              return e('td', {key:col, className:'px-3 py-2 border border-gray-200 text-gray-800 align-top max-w-xs ' +
                 (MULTILINE_COLS.has(col) ? 'whitespace-pre-wrap' : 'whitespace-normal')},
                 row[col] != null ? row[col] : '')
-            ));
+            }));
             return e('tr', {key:i, className: i%2===0 ? 'bg-white' : 'bg-gray-50'}, cells);
           });
       return e('div', null,
@@ -169,7 +187,7 @@
       return uploaded.filter(r => !seen.has(JSON.stringify(r))).concat(live);
     }
 
-    function TabPanel({ tabId, liveRows }) {
+    function TabPanel({ tabId, liveRows, feedback, setFeedback }) {
       const [merged, setMerged] = React.useState(null);
       const [error,  setError]  = React.useState(null);
       const manualRef           = React.useRef(null);
@@ -182,7 +200,7 @@
       const isManual = merged != null;
       return e('div', null,
         e(DropZone,  {onLoad: handleUpload, error, setError}),
-        e(DataTable, {tabId, rows, isManual, onClearManual: handleClear})
+        e(DataTable, {tabId, rows, isManual, onClearManual: handleClear, feedback, setFeedback})
       );
     }
 
@@ -192,6 +210,7 @@
       const [lastSync,  setLastSync]  = React.useState(null);
       const [polling,   setPolling]   = React.useState(false);
       const [isLocal,   setIsLocal]   = React.useState(false);
+      const [feedback,  setFeedback]  = React.useState({});
 
       React.useEffect(() => { if (window.location.protocol === 'file:') setIsLocal(true); }, []);
 
@@ -233,7 +252,7 @@
         ),
         e(TabBar, {activeTab, rowCounts, onTabChange: setActiveTab}),
         TABS.map(tab => activeTab === tab.id
-          ? e(TabPanel, {key: tab.id, tabId: tab.id, liveRows: data[tab.id]||[]})
+          ? e(TabPanel, {key: tab.id, tabId: tab.id, liveRows: data[tab.id]||[], feedback, setFeedback})
           : null
         )
       );
