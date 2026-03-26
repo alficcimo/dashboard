@@ -32,6 +32,7 @@ SYNC_FILES = [
     "content-improver.json",
     "content-caption-analysis.json",
     "content-title-analyzer.json",
+    "index.html",
 ]
 
 os.chdir(DEPLOY_DIR)
