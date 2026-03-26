@@ -1,11 +1,13 @@
 const fs = require('fs');
-const content = fs.readFileSync('./index.html', 'utf8');
+const path = require('path');
+
+const filePath = path.join(__dirname, 'index.html');
+const content = fs.readFileSync(filePath, 'utf8');
+
+// Print first 100 lines to understand structure
 const lines = content.split('\n');
-console.log('=== Lines 30-50 ===');
-lines.slice(30, 50).forEach((l, i) => {
-  console.log((31+i) + ': ' + l);
-});
-console.log('\n=== Lines 60-80 ===');
-lines.slice(60, 80).forEach((l, i) => {
-  console.log((61+i) + ': ' + l);
+lines.forEach((line, idx) => {
+  if (idx < 100) {
+    console.log(`${idx + 1}: ${line}`);
+  }
 });
