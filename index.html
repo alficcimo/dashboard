@@ -271,6 +271,10 @@
       }, [liveRows]);
       function handleUpload(up) { manualRef.current = up; setMerged(mergeRows(up, liveRows)); setError(null); }
       function handleClear()    { manualRef.current = null; setMerged(null); setError(null); }
+      function handleClearPending() {
+        localStorage.removeItem('caption_analyzer_pending');
+        liveRows.splice(0, liveRows.length); // Clear the rows that were pending
+      }
       async function handleSaveIdea() {
         if (!draftIdea.idea.trim() || saving === 'saving') return;
         const today = new Date().toISOString().slice(0, 10);
@@ -307,7 +311,16 @@
         ? [...savedIdeas.filter(s => !baseRows.some(r => r.idea && s.idea && r.idea.trim().toLowerCase() === s.idea.trim().toLowerCase())), ...baseRows]
         : baseRows;
       const isManual = merged != null;
+      const pending = tabId === 'caption_analyzer' ? (() => {
+        try { return JSON.parse(localStorage.getItem('caption_analyzer_pending') || '[]'); } catch(e) { return []; }
+      })() : [];
       return e('div', null,
+        tabId === 'caption_analyzer' && pending.length > 0
+          ? e('div', {className:'px-4 py-1.5 bg-yellow-50 border-b border-yellow-200 flex items-center justify-between'},
+              e('span', {className:'text-xs text-yellow-700 font-medium'}, pending.length + ' pending item' + (pending.length !== 1 ? 's' : '') + ' in queue'),
+              e('button', {onClick: () => { handleClearPending(); window.location.reload(); }, className:'text-xs text-yellow-600 hover:text-yellow-800 underline'}, 'Clear all pending')
+            )
+          : null,
         tabId === 'ideas'
           ? e('div', {className: 'flex items-stretch gap-2 px-4 pt-3 pb-1'},
               e('button', {
