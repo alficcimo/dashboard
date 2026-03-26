@@ -99,7 +99,7 @@
       );
     }
 
-    function DropZone({ onLoad, error, setError }) {
+    function DropZone({ onLoad, error, setError, wrapperClass }) {
       const inputRef = React.useRef(null);
       const [dragging, setDragging] = React.useState(false);
       function processFile(file) {
@@ -116,7 +116,7 @@
         };
         reader.readAsText(file);
       }
-      return e('div', {className: 'px-4 pt-3 pb-1'},
+      return e('div', {className: wrapperClass || 'px-4 pt-3 pb-1'},
         e('div', {
           onClick: () => inputRef.current && inputRef.current.click(),
           onDragOver: ev => { ev.preventDefault(); setDragging(true); },
@@ -190,18 +190,64 @@
     }
 
     function TabPanel({ tabId, liveRows, feedback, setFeedback, onDislike, onLike }) {
-      const [merged, setMerged] = React.useState(null);
-      const [error,  setError]  = React.useState(null);
-      const manualRef           = React.useRef(null);
+      const [merged,     setMerged]     = React.useState(null);
+      const [error,      setError]      = React.useState(null);
+      const [addingIdea, setAddingIdea] = React.useState(false);
+      const [draftIdea,  setDraftIdea]  = React.useState({idea: '', source: ''});
+      const manualRef = React.useRef(null);
+      const [savedIdeas, setSavedIdeas] = React.useState(() => {
+        try { return JSON.parse(localStorage.getItem('manual_ideas') || '[]'); } catch(e) { return []; }
+      });
       React.useEffect(() => {
         if (manualRef.current) setMerged(mergeRows(manualRef.current, liveRows));
       }, [liveRows]);
       function handleUpload(up) { manualRef.current = up; setMerged(mergeRows(up, liveRows)); setError(null); }
       function handleClear()    { manualRef.current = null; setMerged(null); setError(null); }
-      const rows     = merged != null ? merged : liveRows;
+      function handleSaveIdea() {
+        if (!draftIdea.idea.trim()) return;
+        const today = new Date().toISOString().slice(0, 10);
+        const newIdea = { date: today, idea: draftIdea.idea.trim(), source: draftIdea.source.trim() };
+        const updated = [newIdea, ...savedIdeas];
+        setSavedIdeas(updated);
+        localStorage.setItem('manual_ideas', JSON.stringify(updated));
+        setAddingIdea(false);
+        setDraftIdea({idea: '', source: ''});
+      }
+      const baseRows = merged != null ? merged : liveRows;
+      const rows     = tabId === 'ideas' ? [...savedIdeas, ...baseRows] : baseRows;
       const isManual = merged != null;
       return e('div', null,
-        e(DropZone,  {onLoad: handleUpload, error, setError}),
+        tabId === 'ideas'
+          ? e('div', {className: 'flex items-stretch gap-2 px-4 pt-3 pb-1'},
+              e('button', {
+                onClick: () => { setAddingIdea(!addingIdea); setDraftIdea({idea: '', source: ''}); },
+                className: 'flex-shrink-0 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 self-center whitespace-nowrap'
+              }, '+ Add idea'),
+              e(DropZone, {onLoad: handleUpload, error, setError, wrapperClass: 'flex-1'})
+            )
+          : e(DropZone, {onLoad: handleUpload, error, setError}),
+        addingIdea ? e('div', {className: 'px-4 py-2 bg-green-50 border-b border-green-200'},
+          e('div', {className: 'flex gap-2 items-center'},
+            e('span', {className: 'text-xs text-gray-400 whitespace-nowrap'}, new Date().toISOString().slice(0, 10)),
+            e('input', {
+              type: 'text', placeholder: 'Idea text (required)',
+              value: draftIdea.idea,
+              onChange: ev => setDraftIdea({...draftIdea, idea: ev.target.value}),
+              onKeyDown: ev => { if (ev.key === 'Enter') handleSaveIdea(); if (ev.key === 'Escape') setAddingIdea(false); },
+              className: 'flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-green-400',
+              autoFocus: true
+            }),
+            e('input', {
+              type: 'text', placeholder: 'Source (optional)',
+              value: draftIdea.source,
+              onChange: ev => setDraftIdea({...draftIdea, source: ev.target.value}),
+              onKeyDown: ev => { if (ev.key === 'Enter') handleSaveIdea(); if (ev.key === 'Escape') setAddingIdea(false); },
+              className: 'flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-green-400'
+            }),
+            e('button', {onClick: handleSaveIdea, className: 'px-3 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700'}, 'Save'),
+            e('button', {onClick: () => { setAddingIdea(false); setDraftIdea({idea: '', source: ''}); }, className: 'px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded hover:bg-gray-300'}, 'Cancel')
+          )
+        ) : null,
         e(DataTable, {tabId, rows, isManual, onClearManual: handleClear, feedback, setFeedback,
           onDislike: tabId === 'captions' ? onDislike : null,
           onLike:    tabId === 'captions' ? onLike    : null})
