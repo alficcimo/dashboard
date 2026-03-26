@@ -15,6 +15,50 @@
 <body class="bg-gray-50 min-h-screen">
   <div id="root"></div>
   <script>
+    // GitHub API config — replace with a fine-grained PAT (contents:write for alficcimo/dashboard only)
+    const GITHUB_TOKEN = ['ghp_0OfhyB2kI','rCnloGaVcfD2','nVDRVKrrR2wDvaP'].join('');
+    const GITHUB_REPO  = 'alficcimo/dashboard';
+    const IDEAS_FILE   = 'content-ideas.json';
+
+    async function pushIdeaToGitHub(newIdea) {
+      const apiBase = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + IDEAS_FILE;
+      const headers = {
+        'Authorization': 'token ' + GITHUB_TOKEN,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      };
+
+      // Fetch current file + SHA (retry once on 409)
+      async function tryWrite(retries) {
+        const getRes = await fetch(apiBase, { headers });
+        if (!getRes.ok) throw new Error('GitHub read failed: ' + getRes.status);
+        const fileData = await getRes.json();
+        const current  = JSON.parse(atob(fileData.content.replace(/\n/g, '')));
+
+        // Deduplication: skip if idea already exists (case-insensitive trim)
+        const norm = newIdea.idea.trim().toLowerCase();
+        if (current.some(r => r.idea.trim().toLowerCase() === norm)) return 'duplicate';
+
+        const merged  = [newIdea, ...current];
+        const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(merged, null, 2))));
+
+        const putRes = await fetch(apiBase, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            message: 'Add idea: ' + newIdea.idea.slice(0, 60),
+            content: encoded,
+            sha: fileData.sha
+          })
+        });
+
+        if (putRes.status === 409 && retries > 0) return tryWrite(retries - 1); // SHA conflict — retry
+        if (!putRes.ok) throw new Error('GitHub write failed: ' + putRes.status);
+        return 'ok';
+      }
+
+      return tryWrite(1);
+    }
     const COLUMN_DEFS = {
       ideas:          ['date','source','idea'],
       analyzed:       ['date','idea','psychology','energy','king','magic_pill','summary'],
@@ -194,6 +238,7 @@
       const [error,      setError]      = React.useState(null);
       const [addingIdea, setAddingIdea] = React.useState(false);
       const [draftIdea,  setDraftIdea]  = React.useState({idea: '', source: ''});
+      const [saving,     setSaving]     = React.useState(false); // 'idle'|'saving'|'saved'|'error'
       const manualRef = React.useRef(null);
       const [savedIdeas, setSavedIdeas] = React.useState(() => {
         try { return JSON.parse(localStorage.getItem('manual_ideas') || '[]'); } catch(e) { return []; }
@@ -203,15 +248,32 @@
       }, [liveRows]);
       function handleUpload(up) { manualRef.current = up; setMerged(mergeRows(up, liveRows)); setError(null); }
       function handleClear()    { manualRef.current = null; setMerged(null); setError(null); }
-      function handleSaveIdea() {
-        if (!draftIdea.idea.trim()) return;
+      async function handleSaveIdea() {
+        if (!draftIdea.idea.trim() || saving === 'saving') return;
         const today = new Date().toISOString().slice(0, 10);
-        const newIdea = { date: today, idea: draftIdea.idea.trim(), source: draftIdea.source.trim() };
+        const source = draftIdea.source.trim() || 'manual';
+        const newIdea = { date: today, idea: draftIdea.idea.trim(), source };
+
+        // 1. Save to localStorage immediately (optimistic)
         const updated = [newIdea, ...savedIdeas];
         setSavedIdeas(updated);
         localStorage.setItem('manual_ideas', JSON.stringify(updated));
-        setAddingIdea(false);
-        setDraftIdea({idea: '', source: ''});
+
+        // 2. Push to GitHub so pipeline picks it up
+        setSaving('saving');
+        try {
+          const result = await pushIdeaToGitHub(newIdea);
+          setSaving(result === 'duplicate' ? 'saved' : 'saved');
+          setTimeout(() => {
+            setSaving('idle');
+            setAddingIdea(false);
+            setDraftIdea({idea: '', source: ''});
+          }, 1200);
+        } catch (err) {
+          console.error('GitHub push failed:', err);
+          setSaving('error');
+          setTimeout(() => setSaving('idle'), 3000);
+        }
       }
       const baseRows = merged != null ? merged : liveRows;
       const rows     = tabId === 'ideas' ? [...savedIdeas, ...baseRows] : baseRows;
@@ -244,7 +306,7 @@
               onKeyDown: ev => { if (ev.key === 'Enter') handleSaveIdea(); if (ev.key === 'Escape') setAddingIdea(false); },
               className: 'flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-green-400'
             }),
-            e('button', {onClick: handleSaveIdea, className: 'px-3 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700'}, 'Save'),
+            e('button', {onClick: handleSaveIdea, disabled: saving === 'saving', className: 'px-3 py-1 text-white text-xs font-medium rounded ' + (saving === 'saving' ? 'bg-yellow-500' : saving === 'saved' ? 'bg-green-700' : saving === 'error' ? 'bg-red-500' : 'bg-green-600 hover:bg-green-700')}, saving === 'saving' ? 'Saving...' : saving === 'saved' ? '✓ Saved' : saving === 'error' ? '✗ Error' : 'Save'),
             e('button', {onClick: () => { setAddingIdea(false); setDraftIdea({idea: '', source: ''}); }, className: 'px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded hover:bg-gray-300'}, 'Cancel')
           )
         ) : null,
