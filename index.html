@@ -60,6 +60,28 @@
 
       return tryWrite(1);
     }
+
+    // After saving a new idea, write a .pending-analysis flag to GitHub
+    // so the Claude cron picks it up immediately (no watcher needed)
+    async function setPendingAnalysisFlag(newIdea) {
+      const apiBase = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/.pending-analysis';
+      const headers = {
+        'Authorization': 'token ' + GITHUB_TOKEN,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      };
+      let sha = null;
+      try {
+        const getRes = await fetch(apiBase + '?ref=master', { headers });
+        if (getRes.ok) { const d = await getRes.json(); sha = d.sha; }
+      } catch {}
+      const payload = JSON.stringify({ idea: newIdea.idea, date: newIdea.date, ts: Date.now() });
+      const encoded = btoa(unescape(encodeURIComponent(payload)));
+      const body = { message: 'trigger: analysis for new idea', content: encoded, branch: 'master' };
+      if (sha) body.sha = sha;
+      await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
+    }
+
     const COLUMN_DEFS = {
       ideas:          ['date','source','idea'],
       analyzed:       ['date','idea','psychology','energy','king','magic_pill','summary'],
@@ -264,7 +286,11 @@
         setSaving('saving');
         try {
           const result = await pushIdeaToGitHub(newIdea);
-          setSaving(result === 'duplicate' ? 'saved' : 'saved');
+          if (result === 'ok') {
+            // 3. Set .pending-analysis flag so Claude cron triggers analysis
+            setPendingAnalysisFlag(newIdea).catch(() => {}); // fire-and-forget
+          }
+          setSaving('saved');
           setTimeout(() => {
             setSaving('idle');
             setAddingIdea(false);
