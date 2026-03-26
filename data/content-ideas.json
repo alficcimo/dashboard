@@ -203,5 +203,32 @@
     "date": "2026-03-19",
     "source": "https://reddit.com/r/dating_advice",
     "idea": "Почему он исчезает после лучшего свидания в твоей жизни"
+  },
+  {
+    "id": "idea_001_ai_mentor",
+    "idea": "Персональный ИИ-наставник для развития навыков",
+    "source": "LinkedIn",
+    "category": "Образование",
+    "relevance_score": 8.5,
+    "discovered_at": "2026-03-26T12:00:00Z",
+    "status": "discovered"
+  },
+  {
+    "id": "idea_002_gamification_hr",
+    "idea": "Геймификация корпоративного обучения сотрудников",
+    "source": "Telegram",
+    "category": "HR Tech",
+    "relevance_score": 8.2,
+    "discovered_at": "2026-03-26T12:00:00Z",
+    "status": "discovered"
+  },
+  {
+    "id": "idea_003_micro_learning",
+    "idea": "Микро-обучение в формате коротких видео для мобильных",
+    "source": "Twitter",
+    "category": "EdTech",
+    "relevance_score": 7.9,
+    "discovered_at": "2026-03-26T12:00:00Z",
+    "status": "discovered"
   }
 ]
