@@ -30,7 +30,7 @@
 
       // Fetch current file + SHA (retry once on 409)
       async function tryWrite(retries) {
-        const getRes = await fetch(apiBase, { headers });
+        const getRes = await fetch(apiBase + '?ref=master', { headers });
         if (!getRes.ok) throw new Error('GitHub read failed: ' + getRes.status);
         const fileData = await getRes.json();
         const current  = JSON.parse(atob(fileData.content.replace(/\n/g, '')));
@@ -48,7 +48,8 @@
           body: JSON.stringify({
             message: 'Add idea: ' + newIdea.idea.slice(0, 60),
             content: encoded,
-            sha: fileData.sha
+            sha: fileData.sha,
+            branch: 'master'
           })
         });
 
