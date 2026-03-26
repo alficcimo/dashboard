@@ -109,7 +109,7 @@
     ];
     
     // Polling interval: configurable via URL parameter (?interval=5000), defaults to 30 seconds
-    const DEFAULT_POLL_INTERVAL_MS = 30000;
+    const DEFAULT_POLL_INTERVAL_MS = 5000;
     const urlParams = new URLSearchParams(window.location.search);
     const POLL_INTERVAL_MS = parseInt(urlParams.get('interval')) || DEFAULT_POLL_INTERVAL_MS;
 
