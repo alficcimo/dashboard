@@ -1,0 +1,29 @@
+[
+    {
+        "id":  "idea_ai_coach",
+        "source":  "Product Hunt",
+        "relevance_score":  9.2,
+        "idea":  "Personal AI coach for skill development",
+        "discovered_at":  "2026-03-26T23:47:00Z",
+        "category":  "AI",
+        "status":  "pending_analysis"
+    },
+    {
+        "id":  "idea_game_learning",
+        "source":  "LinkedIn",
+        "relevance_score":  9.1,
+        "idea":  "Gamification for corporate onboarding",
+        "discovered_at":  "2026-03-26T23:48:00Z",
+        "category":  "Gamification",
+        "status":  "pending_analysis"
+    },
+    {
+        "id":  "idea_community",
+        "source":  "Twitter",
+        "relevance_score":  8.7,
+        "idea":  "Community-driven content curation platform",
+        "discovered_at":  "2026-03-26T23:49:00Z",
+        "category":  "Community",
+        "status":  "pending_analysis"
+    }
+]
