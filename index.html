@@ -33,8 +33,7 @@
         const getRes = await fetch(apiBase + '?ref=master', { headers });
         if (!getRes.ok) throw new Error('GitHub read failed: ' + getRes.status);
         const fileData = await getRes.json();
-        const current  = (function(b64){const raw=atob(b64);const bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);return JSON.parse(new TextDecoder('utf-8').decode(bytes));})(fileData.content.replace(/
-/g,''));
+        const current  = (function(b64){const raw=atob(b64);const bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);return JSON.parse(new TextDecoder('utf-8').decode(bytes));})(fileData.content.replace(/\n/g,''));
 
         // Deduplication: skip if idea already exists (case-insensitive trim)
         const norm = newIdea.idea.trim().toLowerCase();
