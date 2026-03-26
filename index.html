@@ -263,9 +263,7 @@
       const [draftIdea,  setDraftIdea]  = React.useState({idea: '', source: ''});
       const [saving,     setSaving]     = React.useState(false); // 'idle'|'saving'|'saved'|'error'
       const manualRef = React.useRef(null);
-      const [savedIdeas, setSavedIdeas] = React.useState(() => {
-        try { return JSON.parse(localStorage.getItem('manual_ideas') || '[]'); } catch(e) { return []; }
-      });
+      const [savedIdeas, setSavedIdeas] = React.useState([]);
       React.useEffect(() => {
         if (manualRef.current) setMerged(mergeRows(manualRef.current, liveRows));
       }, [liveRows]);
@@ -281,10 +279,9 @@
         const source = draftIdea.source.trim() || 'manual';
         const newIdea = { date: today, idea: draftIdea.idea.trim(), source };
 
-        // 1. Save to localStorage immediately (optimistic)
+        // 1. Optimistic local update (no localStorage cache)
         const updated = [newIdea, ...savedIdeas];
         setSavedIdeas(updated);
-        localStorage.setItem('manual_ideas', JSON.stringify(updated));
 
         // 2. Push to GitHub so pipeline picks it up
         setSaving('saving');
@@ -309,6 +306,7 @@
       const baseRows = merged != null ? merged : liveRows;
       const rows     = tabId === 'ideas'
         ? [...savedIdeas.filter(s => !baseRows.some(r => r.idea && s.idea && r.idea.trim().toLowerCase() === s.idea.trim().toLowerCase())), ...baseRows]
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
         : baseRows;
       const isManual = merged != null;
       const pending = tabId === 'caption_analyzer' ? (() => {
