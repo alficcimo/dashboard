@@ -149,6 +149,8 @@
       return e('div', {className: 'flex border-b border-gray-300 bg-white overflow-x-auto sticky top-0 z-10 shadow-sm'},
         TABS.map(function(tab) {
           const count = rowCounts[tab.id] != null ? rowCounts[tab.id] : 0;
+          // Hide caption_analyzer tab if no data
+          if (tab.id === 'caption_analyzer' && count === 0) return null;
           const isActive = activeTab === tab.id;
           return e('button', {
             key: tab.id,
@@ -458,11 +460,23 @@
             e(SyncIndicator, {lastSync, polling, pollInterval: POLL_INTERVAL_MS})
           )
         ),
-        e(TabBar, {activeTab, rowCounts, onTabChange: (id) => { setActiveTab(id); localStorage.setItem('activeTab', id); }}),
-        TABS.map(tab => activeTab === tab.id
-          ? e(TabPanel, {key: tab.id, tabId: tab.id, liveRows: data[tab.id]||[], feedback, setFeedback, onDislike: handleDislike, onLike: handleLike})
-          : null
-        )
+        e(TabBar, {activeTab, rowCounts, onTabChange: (id) => {
+          // If switching to hidden caption_analyzer, go to ideas instead
+          if (id === 'caption_analyzer' && rowCounts['caption_analyzer'] === 0) {
+            setActiveTab('ideas');
+            localStorage.setItem('activeTab', 'ideas');
+          } else {
+            setActiveTab(id);
+            localStorage.setItem('activeTab', id);
+          }
+        }}),
+        TABS.map(tab => {
+          // Skip hidden caption_analyzer tab
+          if (tab.id === 'caption_analyzer' && rowCounts['caption_analyzer'] === 0) return null;
+          return activeTab === tab.id
+            ? e(TabPanel, {key: tab.id, tabId: tab.id, liveRows: data[tab.id]||[], feedback, setFeedback, onDislike: handleDislike, onLike: handleLike})
+            : null;
+        })
       );
     }
 
