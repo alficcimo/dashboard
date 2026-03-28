@@ -1,5 +1,29 @@
 [
   {
+    "date": "2026-03-26",
+    "idea": "Шрекинг: почему люди специально выглядят хуже на первом свидании и что это говорит об их страхе быть отвергнутыми",
+    "source": "https://lifehacker.ru/chto-takoe-shreking/",
+    "category": "Relationships",
+    "discovered_at": "2026-03-28T21:04:24Z",
+    "status": "pending_analysis"
+  },
+  {
+    "date": "2026-03-23",
+    "idea": "Нулевое свидание: встреча до первого свидания которую психологи называют лучшим фильтром для отношений",
+    "source": "https://lifehacker.ru/nulevoe-svidanie/",
+    "category": "Relationships",
+    "discovered_at": "2026-03-28T21:04:24Z",
+    "status": "pending_analysis"
+  },
+  {
+    "date": "2026-03-22",
+    "idea": "Филофобия: как страх влюбиться разрушает отношения ещё до того как они начались",
+    "source": "https://lifehacker.ru/filofobiya/",
+    "category": "Psychology",
+    "discovered_at": "2026-03-28T21:04:24Z",
+    "status": "pending_analysis"
+  },
+  {
     "id": "idea_001_ai_mentor",
     "idea": "Персональный ИИ-наставник для развития навыков",
     "source": "LinkedIn",
