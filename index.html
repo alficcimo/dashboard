@@ -20,66 +20,91 @@
     const GITHUB_REPO  = 'alficcimo/dashboard';
     const IDEAS_FILE   = 'content-ideas.json';
 
-    async function pushIdeaToGitHub(newIdea) {
-      const apiBase = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + IDEAS_FILE;
+    const GITHUB_BRANCH = 'main';
+
+    // Generic helper: read a JSON file from GitHub, returns { sha, data }
+    async function ghReadJSON(filename) {
+      const headers = {
+        'Authorization': 'token ' + GITHUB_TOKEN,
+        'Accept': 'application/vnd.github.v3+json'
+      };
+      const res = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + filename + '?ref=' + GITHUB_BRANCH, { headers });
+      if (!res.ok) return { sha: null, data: [] };
+      const d = await res.json();
+      const raw = atob(d.content.replace(/\n/g,''));
+      const bytes = new Uint8Array(raw.length);
+      for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+      return { sha: d.sha, data: JSON.parse(new TextDecoder('utf-8').decode(bytes)) };
+    }
+
+    // Generic helper: write a JSON file to GitHub
+    async function ghWriteJSON(filename, data, sha, message) {
       const headers = {
         'Authorization': 'token ' + GITHUB_TOKEN,
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json'
       };
+      const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+      const body = { message, content: encoded, branch: GITHUB_BRANCH };
+      if (sha) body.sha = sha;
+      const res = await fetch('https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + filename, {
+        method: 'PUT', headers, body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error('GitHub write failed: ' + res.status);
+      return res.json();
+    }
 
-      // Fetch current file + SHA (retry once on 409)
+    async function pushIdeaToGitHub(newIdea) {
       async function tryWrite(retries) {
-        const getRes = await fetch(apiBase + '?ref=master', { headers });
-        if (!getRes.ok) throw new Error('GitHub read failed: ' + getRes.status);
-        const fileData = await getRes.json();
-        const current  = (function(b64){const raw=atob(b64);const bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);return JSON.parse(new TextDecoder('utf-8').decode(bytes));})(fileData.content.replace(/\n/g,''));
-
-        // Deduplication: skip if idea already exists (case-insensitive trim)
+        const { sha, data: current } = await ghReadJSON(IDEAS_FILE);
+        if (!sha) throw new Error('GitHub read failed');
         const norm = newIdea.idea.trim().toLowerCase();
-        if (current.some(r => r.idea.trim().toLowerCase() === norm)) return 'duplicate';
-
-        const merged  = [newIdea, ...current];
-        const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(merged, null, 2))));
-
-        const putRes = await fetch(apiBase, {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify({
-            message: 'Add idea: ' + newIdea.idea.slice(0, 60),
-            content: encoded,
-            sha: fileData.sha,
-            branch: 'master'
-          })
-        });
-
-        if (putRes.status === 409 && retries > 0) return tryWrite(retries - 1); // SHA conflict — retry
-        if (!putRes.ok) throw new Error('GitHub write failed: ' + putRes.status);
+        if (current.some(r => r.idea && r.idea.trim().toLowerCase() === norm)) return 'duplicate';
+        await ghWriteJSON(IDEAS_FILE, [newIdea, ...current], sha, 'Add idea: ' + newIdea.idea.slice(0, 60));
         return 'ok';
       }
-
-      return tryWrite(1);
+      try { return await tryWrite(1); }
+      catch (e) { if (e.message && e.message.includes('409')) return tryWrite(0); throw e; }
     }
 
     // After saving a new idea, write a .pending-analysis flag to GitHub
-    // so the Claude cron picks it up immediately (no watcher needed)
     async function setPendingAnalysisFlag(newIdea) {
-      const apiBase = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/.pending-analysis';
       const headers = {
         'Authorization': 'token ' + GITHUB_TOKEN,
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json'
       };
+      const apiBase = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/.pending-analysis';
       let sha = null;
       try {
-        const getRes = await fetch(apiBase + '?ref=master', { headers });
+        const getRes = await fetch(apiBase + '?ref=' + GITHUB_BRANCH, { headers });
         if (getRes.ok) { const d = await getRes.json(); sha = d.sha; }
       } catch {}
       const payload = JSON.stringify({ idea: newIdea.idea, date: newIdea.date, ts: Date.now() });
       const encoded = btoa(unescape(encodeURIComponent(payload)));
-      const body = { message: 'trigger: analysis for new idea', content: encoded, branch: 'master' };
+      const body = { message: 'trigger: analysis for new idea', content: encoded, branch: GITHUB_BRANCH };
       if (sha) body.sha = sha;
       await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
+    }
+
+    // When a caption is disliked — push it to content-caption-pending.json on GitHub
+    // so the Caption Analyzer skill can pick it up without manual copy-paste
+    async function pushDislikedCaptionToGitHub(row) {
+      try {
+        const PENDING_FILE = 'content-caption-pending.json';
+        const { sha, data: current } = await ghReadJSON(PENDING_FILE);
+        const entry = {
+          date: row.date || new Date().toISOString().slice(0,10),
+          title: row.title || '',
+          original_caption: row.caption,
+          weakest_factors: '', what_to_improve: '', improved_caption: ''
+        };
+        const alreadyIn = current.some(p => p.original_caption === row.caption && p.date === entry.date);
+        if (alreadyIn) return;
+        await ghWriteJSON(PENDING_FILE, [entry, ...current], sha, 'Dislike: caption queued for analysis');
+      } catch (e) {
+        console.warn('pushDislikedCaption failed:', e);
+      }
     }
 
     const COLUMN_DEFS = {
@@ -423,6 +448,8 @@
           };
           localStorage.setItem(PENDING_KEY, JSON.stringify([newEntry, ...pending]));
           setData(prev => ({...prev, caption_analyzer: [newEntry, ...(prev.caption_analyzer || [])]}));
+          // Also push to GitHub so Caption Analyzer skill can read it without manual input
+          pushDislikedCaptionToGitHub(row);
         }
       };
 
