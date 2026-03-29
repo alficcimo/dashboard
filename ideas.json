@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "date": "01.03.2026",
+    "idea": "Почему люди в 2026 году начали ходить на свидания без проработки себя и почему это работает лучше терапии",
+    "source": "https://www.marieclaire.ru/psychology/deiting-posle-terapii-pochemu-v-2026-godu-seksualno-byt-nemnogo-neprorabotannym/",
+    "category": "Relationships",
+    "discovered_at": "2026-03-29T21:44:40Z",
+    "status": "new",
+    "новые": true
+  },
+  {
+    "date": "15.03.2026",
+    "idea": "Психологи назвали тип людей которые убегают из отношений именно тогда когда им там хорошо",
+    "source": "https://www.psychologies.ru/standpoint/ya-dokaju-chto-tyi-mne-ne-nujen-kak-voznikaet-kontrzavisimost/",
+    "category": "Psychology",
+    "discovered_at": "2026-03-29T21:44:40Z",
+    "status": "new",
+    "новые": true
+  },
+  {
+    "date": "20.03.2026",
+    "idea": "Учёные выяснили на какой стадии влюблённости большинство людей застревают и как выйти из этой ловушки",
+    "source": "https://the-day.ru/psihologiya/7-stadii-vlyublennosti-v-2026-godu-pochemu-my-zastrevaem-na-vtoroi-i-boimsya-idti-dalshe/",
+    "category": "Relationships",
+    "discovered_at": "2026-03-29T21:44:40Z",
+    "status": "new",
+    "новые": true
+  }
+]
