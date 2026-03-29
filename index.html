@@ -47,23 +47,70 @@
       }, []);
 
       const rows = data[activeTab] || [];
+      const tabCounts = {};
+      Object.keys(data).forEach(key => {
+        tabCounts[key] = (data[key] || []).length;
+      });
+
+      const renderTable = () => {
+        if (rows.length === 0) {
+          return React.createElement('div', { className: 'text-center text-gray-400 text-lg py-8' }, 'No data');
+        }
+
+        const getColumnHeaders = () => {
+          if (rows.length === 0) return [];
+          const firstRow = rows[0];
+          return Object.keys(firstRow);
+        };
+
+        const headers = getColumnHeaders();
+
+        return React.createElement('div', { className: 'overflow-x-auto' },
+          React.createElement('table', { className: 'w-full border-collapse' },
+            React.createElement('thead', {},
+              React.createElement('tr', { className: 'border-b-2 border-gray-300 bg-gray-100' },
+                React.createElement('th', { className: 'px-4 py-2 text-left font-bold' }, '#'),
+                headers.map(header =>
+                  React.createElement('th', { key: header, className: 'px-4 py-2 text-left font-bold text-sm' }, header)
+                )
+              )
+            ),
+            React.createElement('tbody', {},
+              rows.map((row, i) =>
+                React.createElement('tr', { key: i, className: 'border-b border-gray-200 hover:bg-gray-50' },
+                  React.createElement('td', { className: 'px-4 py-2 text-gray-500 text-sm' }, i + 1),
+                  headers.map(header =>
+                    React.createElement('td', { key: `${i}-${header}`, className: 'px-4 py-2 text-sm' },
+                      typeof row[header] === 'object' ? JSON.stringify(row[header]) : String(row[header])
+                    )
+                  )
+                )
+              )
+            )
+          )
+        );
+      };
 
       return React.createElement('div', { className: 'min-h-screen bg-gray-50 p-8' },
-        React.createElement('h1', { className: 'text-4xl font-bold mb-8' }, 'Content Farm Dashboard'),
-        React.createElement('div', { className: 'flex gap-4 mb-8' },
+        React.createElement('div', { className: 'flex justify-between items-center mb-8' },
+          React.createElement('h1', { className: 'text-4xl font-bold' }, 'Content Farm Dashboard'),
+          React.createElement('div', { className: 'text-sm text-gray-500' },
+            loading ? 'Loading...' : React.createElement('span', { className: 'text-green-600 font-medium' }, 'Just updated - auto-refresh every 5s')
+          )
+        ),
+        React.createElement('div', { className: 'flex gap-2 mb-8 flex-wrap' },
           TABS.map(tab =>
             React.createElement('button', {
               key: tab.id,
               onClick: () => setActiveTab(tab.id),
-              className: `px-4 py-2 font-medium ${activeTab === tab.id ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`
-            }, `${tab.label} (${rows.length})`)
+              className: `px-4 py-2 font-medium rounded transition ${activeTab === tab.id ? 'bg-blue-500 text-white shadow' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'}`
+            }, `${tab.label} (${tabCounts[tab.id] || 0})`)
           )
         ),
-        loading ? React.createElement('div', { className: 'text-center text-gray-500' }, 'Loading...') :
-        React.createElement('div', { className: 'bg-white rounded-lg shadow p-8' },
-          rows.length === 0 ? 
-            React.createElement('div', { className: 'text-center text-gray-400 text-lg' }, 'No data') :
-            React.createElement('div', {}, rows.map((row, i) => React.createElement('div', { key: i, className: 'mb-4 p-4 border rounded' }, JSON.stringify(row))))
+        React.createElement('div', { className: 'bg-white rounded-lg shadow-lg' },
+          loading ?
+            React.createElement('div', { className: 'text-center text-gray-500 py-12' }, 'Loading...') :
+            React.createElement('div', { className: 'p-6' }, renderTable())
         )
       );
     }
