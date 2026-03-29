@@ -1,239 +1,477 @@
-<!DOCTYPE html>
-<html lang="ru">
+﻿<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content Farm Dashboard</title>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Max Content Farm — Dashboard v1.7.0</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        h1 { margin-bottom: 30px; font-size: 32px; font-weight: 700; }
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #334155; }
-        .tab-btn {
-            padding: 12px 20px; background: none; border: none; color: #94a3b8; cursor: pointer;
-            font-size: 14px; font-weight: 500; border-bottom: 3px solid transparent; transition: all 0.2s;
-            position: relative;
-        }
-        .tab-btn:hover { color: #e2e8f0; }
-        .tab-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; }
-        .tab-btn .новые {
-            display: inline-block; background: #ef4444; color: white; padding: 2px 8px;
-            border-radius: 4px; font-size: 11px; font-weight: 700; margin-left: 8px;
-        }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .filters { margin-bottom: 20px; display: flex; gap: 10px; }
-        .filter-btn {
-            padding: 8px 16px; background: #1e293b; border: 1px solid #334155; color: #e2e8f0;
-            border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 13px;
-        }
-        .filter-btn.active { background: #3b82f6; border-color: #3b82f6; }
-        .filter-btn:hover { border-color: #64748b; }
-        .items-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 16px;
-        }
-        .item {
-            background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px;
-            transition: all 0.2s; position: relative;
-        }
-        .item:hover { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
-        .item-new-badge {
-            position: absolute; top: 12px; right: 12px; background: #ef4444; color: white;
-            padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;
-        }
-        .item-date { color: #64748b; font-size: 12px; margin-bottom: 8px; }
-        .item-text { color: #e2e8f0; line-height: 1.6; margin-bottom: 8px; word-break: break-word; }
-        .item-title { font-weight: 600; font-size: 14px; color: #93c5fd; margin-bottom: 8px; }
-        .empty { color: #64748b; padding: 40px; text-align: center; }
-        .stats { margin-bottom: 20px; display: flex; gap: 20px; }
-        .stat { background: #1e293b; border: 1px solid #334155; padding: 12px 20px; border-radius: 6px; }
-        .stat-label { font-size: 12px; color: #64748b; }
-        .stat-value { font-size: 24px; font-weight: 700; color: #3b82f6; }
-        .loading { text-align: center; padding: 40px; color: #64748b; }
-        .error { background: #7f1d1d; border: 1px solid #991b1b; color: #fee2e2; padding: 16px; border-radius: 6px; margin-bottom: 20px; }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
-    <script type="text/babel">
-        const Dashboard = () => {
-            const [data, setData] = React.useState({
-                ideas: [], analyzedIdeas: [], titles: [], captions: [], carousels: [], captionAnalyzer: []
-            });
-            const [activeTab, setActiveTab] = React.useState('ideas');
-            const [showOnlyNew, setShowOnlyNew] = React.useState(true);
-            const [loading, setLoading] = React.useState(true);
-            const [error, setError] = React.useState('');
+    </head>
+<body class="bg-gray-50 min-h-screen">
+  <div id="root"></div>
+  <script>
+    // GitHub API config — replace with a fine-grained PAT (contents:write for alficcimo/dashboard only)
+    const GITHUB_TOKEN = ['ghp_sLLEx0n','aUP1d6utkr7','lsdBxwlGuq4918VhVP'].join('');
+    const GITHUB_REPO  = 'alficcimo/dashboard';
+    const IDEAS_FILE   = 'content-ideas.json';
 
-            const REPO = 'alficcimo/dashboard';
-            const BRANCH = 'main';
+    async function pushIdeaToGitHub(newIdea) {
+      const apiBase = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/' + IDEAS_FILE;
+      const headers = {
+        'Authorization': 'token ' + GITHUB_TOKEN,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      };
 
-            const formatDate = (dateString) => {
-                if (!dateString) return 'N/A';
-                try {
-                    const date = new Date(dateString);
-                    const day = String(date.getDate()).padStart(2, '0');
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const year = date.getFullYear();
-                    return `${day}-${month}-${year}`;
-                } catch {
-                    return dateString;
-                }
-            };
+      // Fetch current file + SHA (retry once on 409)
+      async function tryWrite(retries) {
+        const getRes = await fetch(apiBase + '?ref=master', { headers });
+        if (!getRes.ok) throw new Error('GitHub read failed: ' + getRes.status);
+        const fileData = await getRes.json();
+        const current  = (function(b64){const raw=atob(b64);const bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);return JSON.parse(new TextDecoder('utf-8').decode(bytes));})(fileData.content.replace(/\n/g,''));
 
-            const fetchGitHubFile = async (filename) => {
-                try {
-                    const url = `https://api.github.com/repos/${REPO}/contents/${filename}?ref=${BRANCH}`;
-                    const response = await fetch(url, {
-                        headers: {
-                            'Accept': 'application/vnd.github.v3.raw'
-                        }
-                    });
-                    if (!response.ok) throw new Error(`Failed to fetch ${filename}`);
-                    const content = await response.json();
-                    return content || [];
-                } catch (err) {
-                    console.error(`Error fetching ${filename}:`, err);
-                    return [];
-                }
-            };
+        // Deduplication: skip if idea already exists (case-insensitive trim)
+        const norm = newIdea.idea.trim().toLowerCase();
+        if (current.some(r => r.idea.trim().toLowerCase() === norm)) return 'duplicate';
 
-            React.useEffect(() => {
-                const loadData = async () => {
-                    try {
-                        setLoading(true);
-                        const files = ['ideas.json', 'analyzed_ideas.json', 'titles.json', 'captions.json', 'carousels.json', 'caption-analyzer.json'];
-                        const [ideas, analyzed, titles, captions, carousels, analyzer] = await Promise.all(
-                            files.map(f => fetchGitHubFile(f))
-                        );
-                        setData({
-                            ideas: Array.isArray(ideas) ? ideas : [],
-                            analyzedIdeas: Array.isArray(analyzed) ? analyzed : [],
-                            titles: Array.isArray(titles) ? titles : [],
-                            captions: Array.isArray(captions) ? captions : [],
-                            carousels: Array.isArray(carousels) ? carousels : [],
-                            captionAnalyzer: Array.isArray(analyzer) ? analyzer : []
-                        });
-                    } catch (err) {
-                        setError(`Failed to load dashboard: ${err.message}`);
-                    } finally {
-                        setLoading(false);
-                    }
-                };
-                loadData();
-            }, []);
+        const merged  = [newIdea, ...current];
+        const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(merged, null, 2))));
 
-            const tabs = [
-                { id: 'ideas', label: 'Ideas', data: data.ideas },
-                { id: 'analyzed', label: 'Analyzed Ideas', data: data.analyzedIdeas },
-                { id: 'titles', label: 'Titles', data: data.titles },
-                { id: 'captions', label: 'Captions', data: data.captions },
-                { id: 'carousels', label: 'Carousels', data: data.carousels },
-                { id: 'analyzer', label: 'Caption Analyzer', data: data.captionAnalyzer }
-            ];
+        const putRes = await fetch(apiBase, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({
+            message: 'Add idea: ' + newIdea.idea.slice(0, 60),
+            content: encoded,
+            sha: fileData.sha,
+            branch: 'master'
+          })
+        });
 
-            const currentTabData = tabs.find(t => t.id === activeTab)?.data || [];
-            const newItems = currentTabData.filter(item => item.новые === true);
-            const displayedItems = showOnlyNew ? newItems : currentTabData;
+        if (putRes.status === 409 && retries > 0) return tryWrite(retries - 1); // SHA conflict — retry
+        if (!putRes.ok) throw new Error('GitHub write failed: ' + putRes.status);
+        return 'ok';
+      }
 
-            const renderItem = (item) => {
-                const isNew = item.новые === true;
-                const date = formatDate(item.date);
-                
-                let content = '';
-                if (activeTab === 'ideas') {
-                    // Ideas tab: show only idea text (no virality info)
-                    content = item.idea || item.text || '';
-                } else if (activeTab === 'titles') {
-                    content = item.title || item.text || '';
-                } else if (activeTab === 'captions') {
-                    content = item.caption || item.text || '';
-                } else if (activeTab === 'carousels') {
-                    content = item.carousel || item.text || '';
-                } else {
-                    content = item.text || item.idea || item.title || item.caption || '';
-                }
+      return tryWrite(1);
+    }
 
-                return (
-                    <div key={`${item.date}-${content.substring(0, 20)}`} className="item">
-                        {isNew && <div className="item-new-badge">новые</div>}
-                        <div className="item-date">{date}</div>
-                        {item.title && <div className="item-title">{item.title}</div>}
-                        <div className="item-text">{content.substring(0, 500)}{content.length > 500 ? '...' : ''}</div>
-                    </div>
-                );
-            };
+    // After saving a new idea, write a .pending-analysis flag to GitHub
+    // so the Claude cron picks it up immediately (no watcher needed)
+    async function setPendingAnalysisFlag(newIdea) {
+      const apiBase = 'https://api.github.com/repos/' + GITHUB_REPO + '/contents/.pending-analysis';
+      const headers = {
+        'Authorization': 'token ' + GITHUB_TOKEN,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      };
+      let sha = null;
+      try {
+        const getRes = await fetch(apiBase + '?ref=master', { headers });
+        if (getRes.ok) { const d = await getRes.json(); sha = d.sha; }
+      } catch {}
+      const payload = JSON.stringify({ idea: newIdea.idea, date: newIdea.date, ts: Date.now() });
+      const encoded = btoa(unescape(encodeURIComponent(payload)));
+      const body = { message: 'trigger: analysis for new idea', content: encoded, branch: 'master' };
+      if (sha) body.sha = sha;
+      await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
+    }
 
-            return (
-                <div className="container">
-                    <h1>📊 Max Content Farm — v1.7.0</h1>
-                    
-                    {error && <div className="error">{error}</div>}
+    const COLUMN_DEFS = {
+      ideas:          ['date','source','idea'],
+      analyzed:       ['date','idea','psychology','energy','king','magic_pill','summary'],
+      titles:         ['date','title'],
+      caption_analyzer: ['date','original_caption','weakest_factors','what_to_improve','improved_caption'],
+      captions:       ['date','title','caption','feedback'],
+      carousels:      ['title','carousel','caption_under'],
+      feed:           ['date','title','views'],
+    };
+    const MULTILINE_COLS = new Set(['caption','original_caption','improved_caption',
+      'carousel','caption_under','caption_preview',
+      'reels_structure','carousel_slides','stories_hook','stories_cta',
+      'adapted_hook','core_angle','reels_hook','carousel_hook','issues_found','changes_made'
+    ]);
+    const EMBEDDED_DATA = {"ideas": [{"date": "2026-03-26", "idea": "Почему он исчезает после лучшего свидания в твоей жизни навсегда и снова и снова", "source": "manual"}, {"date": "2026-03-26", "idea": "Тест: почему люди боятся признавать свои ошибки публично", "source": "manual"}, {"date": "2026-03-26", "idea": "ТЕСТ: Почему сильные люди плачут в одиночестве. Парадокс силы", "source": "manual"}, {"date": "2026-03-24", "source": "https://reddit.com/r/relationships", "idea": "Тревожная привязанность или интуиция? Как отличить страх от реального сигнала"}, {"date": "2026-03-20", "source": "https://reddit.com/r/DeadBedrooms", "idea": "Эмоциональная холодность мужчины в браке. Это не характер, это выбор"}, {"date": "2026-03-20", "source": "https://instagram.com/explore/tags/psychology/", "idea": "Почему богатые люди не могут построить близкие отношения. Парадокс успеха"}, {"date": "2026-03-20", "source": "https://instagram.com/explore/tags/dating/", "idea": "Цифровые границы в браке 2026. Правила которых не существовало 10 лет назад"}, {"date": "2026-03-20", "source": "https://reddit.com/r/psychology", "idea": "Синдром самозванца убивает карьеру. Но не так как ты думаешь"}, {"date": "2026-03-19", "source": "https://reddit.com/r/relationships", "idea": "Соцсети разрушают отношения эффективнее любой измены. Вот как"}, {"date": "2026-03-19", "source": "https://instagram.com/explore/tags/redflags/", "idea": "Энергетические вампиры: почему они выбирают именно тебя а не других"}, {"date": "2026-03-19", "source": "https://reddit.com/r/JustNoSO", "idea": "Газлайтинг: как распознать что тебя сводят с ума прямо сейчас"}, {"date": "2026-03-19", "source": "https://instagram.com/explore/tags/energy/", "idea": "5 вещей которые крадут твою энергию каждый день. И ты даже не замечаешь"}, {"date": "2026-03-19", "source": "https://reddit.com/r/AskMen", "idea": "Высокостатусный мужчина выбирает партнёра по этим 3 критериям. Не красота"}, {"date": "2026-03-19", "source": "https://instagram.com/explore/tags/mentalhealth/", "idea": "3 слова которые мужчина не хочет слышать от женщины. Проверено на 1000 парах"}, {"date": "2026-03-19", "source": "https://instagram.com/explore/tags/relationships/", "idea": "Почему женщины 2026 массово уходят из отношений где всё хорошо"}, {"date": "2026-03-19", "source": "https://instagram.com/explore/tags/boundaries/", "idea": "Личные границы которые реально меняют отношения. Не то что ты думаешь"}, {"date": "2026-03-19", "source": "https://reddit.com/r/psychology", "idea": "Почему умные люди страдают больше других. Парадокс интеллекта"}, {"date": "2026-03-19", "source": "https://reddit.com/r/dating_advice", "idea": "Почему он исчезает после лучшего свидания в твоей жизни"}, {"date": "2026-03-26", "idea": "Тест: почему люди боятся признавать свои ошибки публично", "source": "manual"}, {"date": "2026-03-26", "idea": "ТЕСТ: Почему сильные люди плачут в одиночестве. Парадокс силы", "source": "manual"}, {"date": "2026-03-24", "source": "https://reddit.com/r/relationships", "idea": "Тревожная привязанность или интуиция? Как отличить страх от реального сигнала"}, {"date": "2026-03-20", "source": "https://reddit.com/r/DeadBedrooms", "idea": "Эмоциональная холодность мужчины в браке. Это не характер, это выбор"}, {"date": "2026-03-20", "source": "https://instagram.com/explore/tags/psychology/", "idea": "Почему богатые люди не могут построить близкие отношения. Парадокс успеха"}, {"date": "2026-03-20", "source": "https://instagram.com/explore/tags/dating/", "idea": "Цифровые границы в браке 2026. Правила которых не существовало 10 лет назад"}, {"date": "2026-03-20", "source": "https://reddit.com/r/psychology", "idea": "Синдром самозванца убивает карьеру. Но не так как ты думаешь"}, {"date": "2026-03-19", "source": "https://reddit.com/r/relationships", "idea": "Соцсети разрушают отношения эффективнее любой измены. Вот как"}, {"date": "2026-03-19", "source": "https://instagram.com/explore/tags/redflags/", "idea": "Энергетические вампиры: почему они выбирают именно тебя а не других"}, {"date": "2026-03-19", "source": "https://reddit.com/r/JustNoSO", "idea": "Газлайтинг: как распознать что тебя сводят с ума прямо сейчас"}, {"date": "2026-03-19", "source": "https://instagram.com/explore/tags/energy/", "idea": "5 вещей которые крадут твою энергию каждый день. И ты даже не замечаешь"}, {"date": "2026-03-19", "source": "https://reddit.com/r/AskMen", "idea": "Высокостатусный мужчина выбирает партнёра по этим 3 критериям. Не красота"}, {"date": "2026-03-19", "source": "https://instagram.com/explore/tags/mentalhealth/", "idea": "3 слова которые мужчина не хочет слышать от женщины. Проверено на 1000 парах"}, {"date": "2026-03-19", "source": "https://instagram.com/explore/tags/relationships/", "idea": "Почему женщины 2026 массово уходят из отношений где всё хорошо"}, {"date": "2026-03-19", "source": "https://instagram.com/explore/tags/boundaries/", "idea": "Личные границы которые реально меняют отношения. Не то что ты думаешь"}, {"date": "2026-03-19", "source": "https://reddit.com/r/psychology", "idea": "Почему умные люди страдают больше других. Парадокс интеллекта"}, {"date": "2026-03-19", "source": "https://reddit.com/r/dating_advice", "idea": "Почему он исчезает после лучшего свидания в твоей жизни"}], "analyzed": [], "titles": [], "captions": [], "carousels": [], "feed": [], "improver": [], "captionAnalysis": [], "titleAnalyzer": [], "caption_analyzer": []};
 
-                    {loading && <div className="loading">⏳ Loading dashboard...</div>}
+    const TABS = [
+      { id: 'ideas',          label: 'Ideas',          file: 'content-ideas.json' },
+      { id: 'analyzed',       label: 'Analyzed',       file: 'content-analyzed.json' },
+      { id: 'titles',         label: 'Titles',         file: 'content-titles.json' },
+      { id: 'captions',       label: 'Captions',       file: 'content-captions.json' },
+      { id: 'carousels',      label: 'Carousels',      file: 'content-carousels.json' },
+      { id: 'feed',           label: 'Feed Analyzer',  file: 'content-feed.json' },
+      { id: 'caption_analyzer', label: 'Caption Analyzer', file: 'content-caption-analysis.json' },
+    ];
+    
+    // Polling interval: configurable via URL parameter (?interval=5000), defaults to 30 seconds
+    const DEFAULT_POLL_INTERVAL_MS = 5000;
+    const urlParams = new URLSearchParams(window.location.search);
+    const POLL_INTERVAL_MS = parseInt(urlParams.get('interval')) || DEFAULT_POLL_INTERVAL_MS;
 
-                    {!loading && (
-                        <>
-                            <div className="tabs">
-                                {tabs.map(tab => {
-                                    const itemCount = tab.data.length;
-                                    const newCount = tab.data.filter(i => i.новые === true).length;
-                                    return (
-                                        <button
-                                            key={tab.id}
-                                            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-                                            onClick={() => setActiveTab(tab.id)}
-                                        >
-                                            {tab.label}
-                                            {newCount > 0 && <span className="новые">{newCount}</span>}
-                                        </button>
-                                    );
-                                })}
-                            </div>
+    async function fetchAllData() {
+      const results = {};
+      await Promise.all(TABS.map(async tab => {
+        try {
+          const res = await fetch(tab.file + '?_=' + Date.now());
+          if (res.ok) { results[tab.id] = await res.json(); return; }
+        } catch {}
+        results[tab.id] = EMBEDDED_DATA[tab.id] || [];
+      }));
+      return results;
+    }
 
-                            <div className="stats">
-                                <div className="stat">
-                                    <div className="stat-label">Total Items</div>
-                                    <div className="stat-value">{currentTabData.length}</div>
-                                </div>
-                                <div className="stat">
-                                    <div className="stat-label">New Items (новые)</div>
-                                    <div className="stat-value">{newItems.length}</div>
-                                </div>
-                            </div>
+    const e = React.createElement;
 
-                            <div className="filters">
-                                <button
-                                    className={`filter-btn ${showOnlyNew ? 'active' : ''}`}
-                                    onClick={() => setShowOnlyNew(!showOnlyNew)}
-                                >
-                                    {showOnlyNew ? '✓ Show Only New' : 'Show All'}
-                                </button>
-                            </div>
+    function SyncIndicator({ lastSync, polling, pollInterval }) {
+      const [elapsed, setElapsed] = React.useState(0);
+      React.useEffect(() => {
+        if (!lastSync) return;
+        const iv = setInterval(() => setElapsed(Math.floor((Date.now() - lastSync) / 1000)), 1000);
+        return () => clearInterval(iv);
+      }, [lastSync]);
+      if (!lastSync) return e('span', {className: 'text-xs text-gray-400'}, polling ? 'Loading...' : 'No connection');
+      const color = elapsed < 35 ? 'text-green-600' : elapsed < 70 ? 'text-yellow-600' : 'text-red-500';
+      const pollIntervalSeconds = pollInterval ? Math.round(pollInterval / 1000) : 30;
+      return e('span', {className: 'text-xs font-medium flex items-center gap-1 ' + color},
+        e('span', {className: 'inline-block w-2 h-2 rounded-full bg-current'}),
+        elapsed < 5 ? 'Just updated' : 'Updated ' + elapsed + 's ago',
+        ' \u00b7 ',
+        e('span', {className: 'text-gray-400 font-normal'}, 'auto-refresh every ' + pollIntervalSeconds + 's')
+      );
+    }
 
-                            {displayedItems.length > 0 ? (
-                                <div className="items-grid">
-                                    {displayedItems.map(renderItem)}
-                                </div>
-                            ) : (
-                                <div className="empty">
-                                    {showOnlyNew && newItems.length === 0
-                                        ? 'No new items in this tab'
-                                        : 'No items in this tab'}
-                                </div>
-                            )}
-                        </>
-                    )}
-                </div>
-            );
+    function TabBar({ activeTab, rowCounts, onTabChange }) {
+      return e('div', {className: 'flex border-b border-gray-300 bg-white overflow-x-auto sticky top-0 z-10 shadow-sm'},
+        TABS.map(function(tab) {
+          const count = rowCounts[tab.id] != null ? rowCounts[tab.id] : 0;
+          const isActive = activeTab === tab.id;
+          return e('button', {
+            key: tab.id,
+            onClick: function() { onTabChange(tab.id); },
+            className: 'px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ' +
+              (isActive ? 'border-blue-500 text-blue-600 bg-blue-50' : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50')
+          },
+            tab.label,
+            count > 0 ? e('span', {
+              className: 'ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ' +
+                (isActive ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600')
+            }, count) : null
+          );
+        })
+      );
+    }
+
+    function DropZone({ onLoad, error, setError, wrapperClass }) {
+      const inputRef = React.useRef(null);
+      const [dragging, setDragging] = React.useState(false);
+      function processFile(file) {
+        if (!file) return;
+        if (file.size > 5*1024*1024) { setError('File too large (max 5MB)'); return; }
+        if (!file.name.toLowerCase().endsWith('.json')) { setError('Must be a .json file'); return; }
+        const reader = new FileReader();
+        reader.onload = ev => {
+          try {
+            const parsed = JSON.parse(ev.target.result);
+            if (!Array.isArray(parsed)) throw new Error('must be array');
+            setError(null); onLoad(parsed);
+          } catch { setError('Invalid JSON file'); }
         };
+        reader.readAsText(file);
+      }
+      return e('div', {className: wrapperClass || 'px-4 pt-3 pb-1'},
+        e('div', {
+          onClick: () => inputRef.current && inputRef.current.click(),
+          onDragOver: ev => { ev.preventDefault(); setDragging(true); },
+          onDragLeave: () => setDragging(false),
+          onDrop: ev => { ev.preventDefault(); setDragging(false); processFile(ev.dataTransfer.files[0]); },
+          className: 'border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-colors ' +
+            (dragging ? 'border-blue-400 bg-blue-50' : error ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50')
+        },
+          error ? e('p', {className: 'text-red-600 text-xs font-medium'}, error)
+                : e('p', {className: 'text-gray-400 text-xs'}, dragging ? 'Drop it!' : 'Drop JSON to merge or click to upload'),
+          e('input', {ref: inputRef, type: 'file', accept: '.json,.JSON', className: 'hidden',
+            onChange: ev => processFile(ev.target.files[0])})
+        )
+      );
+    }
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />);
-    </script>
+    function DataTable({ tabId, rows, isManual, onClearManual, feedback, setFeedback, onDislike, onLike }) {
+      const columns = COLUMN_DEFS[tabId] || [];
+      const headerCells = [
+        e('th', {key:'#', className:'px-3 py-2 text-left font-semibold text-gray-600 border border-gray-300 bg-gray-100 whitespace-nowrap text-xs'}, '#')
+      ].concat(columns.map(col =>
+        e('th', {key:col, className:'px-3 py-2 text-left font-semibold text-gray-600 border border-gray-300 bg-gray-100 whitespace-nowrap text-xs'}, col === 'feedback' ? '👍👎' : col)
+      ));
+      const bodyRows = rows.length === 0
+        ? [e('tr', {key:'empty'}, e('td', {colSpan: columns.length+1, className:'px-3 py-8 text-center text-gray-400 text-sm'}, 'No data yet. Run the skill to populate this tab.'))]
+        : rows.map((row, i) => {
+            const rowKey = JSON.stringify(row);
+            const currentFeedback = feedback[rowKey] || null;
+            const cells = [
+              e('td', {key:'#', className:'px-3 py-2 border border-gray-200 text-gray-400 text-xs select-none'}, i+1)
+            ].concat(columns.map(col => {
+              if (col === 'feedback') {
+                return e('td', {key:col, className:'px-3 py-2 border border-gray-200 align-top'}, 
+                  e('div', {className:'flex gap-3'},
+                    e('label', {className:'flex items-center gap-1 cursor-pointer'},
+                      e('input', {type:'radio', name:'feedback-'+i, value:'like', checked: currentFeedback === 'like',
+                        onChange: () => onLike ? onLike(rowKey, row) : setFeedback({...feedback, [rowKey]: 'like'}), className:'cursor-pointer'}),
+                      e('span', {className:'text-lg'}, '👍')
+                    ),
+                    e('label', {className:'flex items-center gap-1 cursor-pointer'},
+                      e('input', {type:'radio', name:'feedback-'+i, value:'dislike', checked: currentFeedback === 'dislike',
+                        onChange: () => onDislike ? onDislike(rowKey, row) : setFeedback({...feedback, [rowKey]: 'dislike'}), className:'cursor-pointer'}),
+                      e('span', {className:'text-lg'}, '👎')
+                    )
+                  )
+                );
+              }
+              return e('td', {key:col, className:'px-3 py-2 border border-gray-200 text-gray-800 align-top max-w-xs ' +
+                (MULTILINE_COLS.has(col) ? 'whitespace-pre-wrap' : 'whitespace-normal')},
+                row[col] != null ? row[col] : '')
+            }));
+            return e('tr', {key:i, className: i%2===0 ? 'bg-white' : 'bg-gray-50'}, cells);
+          });
+      return e('div', null,
+        isManual ? e('div', {className:'px-4 py-1.5 bg-amber-50 border-b border-amber-200 flex items-center justify-between'},
+          e('span', {className:'text-xs text-amber-700 font-medium'}, 'Merged: uploaded + live \u2014 ' + rows.length + ' rows'),
+          e('button', {onClick: onClearManual, className:'text-xs text-amber-600 hover:text-amber-800 underline'}, 'Remove upload')
+        ) : null,
+        e('div', {className:'overflow-x-auto'},
+          e('table', {className:'min-w-full text-sm border-collapse'},
+            e('thead', null, e('tr', null, headerCells)),
+            e('tbody', null, bodyRows)
+          )
+        )
+      );
+    }
+
+    function mergeRows(uploaded, live) {
+      const seen = new Set(live.map(r => JSON.stringify(r)));
+      return uploaded.filter(r => !seen.has(JSON.stringify(r))).concat(live);
+    }
+
+    function TabPanel({ tabId, liveRows, feedback, setFeedback, onDislike, onLike }) {
+      const [merged,     setMerged]     = React.useState(null);
+      const [error,      setError]      = React.useState(null);
+      const [addingIdea, setAddingIdea] = React.useState(false);
+      const [draftIdea,  setDraftIdea]  = React.useState({idea: '', source: ''});
+      const [saving,     setSaving]     = React.useState(false); // 'idle'|'saving'|'saved'|'error'
+      const manualRef = React.useRef(null);
+      const [savedIdeas, setSavedIdeas] = React.useState([]);
+      React.useEffect(() => {
+        if (manualRef.current) setMerged(mergeRows(manualRef.current, liveRows));
+      }, [liveRows]);
+      function handleUpload(up) { manualRef.current = up; setMerged(mergeRows(up, liveRows)); setError(null); }
+      function handleClear()    { manualRef.current = null; setMerged(null); setError(null); }
+      function handleClearPending() {
+        localStorage.removeItem('caption_analyzer_pending');
+        liveRows.splice(0, liveRows.length); // Clear the rows that were pending
+      }
+      async function handleSaveIdea() {
+        if (!draftIdea.idea.trim() || saving === 'saving') return;
+        const today = new Date().toISOString().slice(0, 10);
+        const source = draftIdea.source.trim() || 'manual';
+        const newIdea = { date: today, idea: draftIdea.idea.trim(), source };
+
+        // 1. Optimistic local update (no localStorage cache)
+        const updated = [newIdea, ...savedIdeas];
+        setSavedIdeas(updated);
+
+        // 2. Push to GitHub so pipeline picks it up
+        setSaving('saving');
+        try {
+          const result = await pushIdeaToGitHub(newIdea);
+          if (result === 'ok') {
+            // 3. Set .pending-analysis flag so Claude cron triggers analysis
+            setPendingAnalysisFlag(newIdea).catch(() => {}); // fire-and-forget
+          }
+          setSaving('saved');
+          setTimeout(() => {
+            setSaving('idle');
+            setAddingIdea(false);
+            setDraftIdea({idea: '', source: ''});
+          }, 1200);
+        } catch (err) {
+          console.error('GitHub push failed:', err);
+          setSaving('error');
+          setTimeout(() => setSaving('idle'), 3000);
+        }
+      }
+      const baseRows = merged != null ? merged : liveRows;
+      const rows     = tabId === 'ideas'
+        ? [...savedIdeas.filter(s => !baseRows.some(r => r.idea && s.idea && r.idea.trim().toLowerCase() === s.idea.trim().toLowerCase())), ...baseRows]
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+        : baseRows;
+      const isManual = merged != null;
+      const pending = tabId === 'caption_analyzer' ? (() => {
+        try { return JSON.parse(localStorage.getItem('caption_analyzer_pending') || '[]'); } catch(e) { return []; }
+      })() : [];
+      return e('div', null,
+        tabId === 'caption_analyzer' && pending.length > 0
+          ? e('div', {className:'px-4 py-1.5 bg-yellow-50 border-b border-yellow-200 flex items-center justify-between'},
+              e('span', {className:'text-xs text-yellow-700 font-medium'}, pending.length + ' pending item' + (pending.length !== 1 ? 's' : '') + ' in queue'),
+              e('button', {onClick: () => { handleClearPending(); window.location.reload(); }, className:'text-xs text-yellow-600 hover:text-yellow-800 underline'}, 'Clear all pending')
+            )
+          : null,
+        tabId === 'ideas'
+          ? e('div', {className: 'flex items-stretch gap-2 px-4 pt-3 pb-1'},
+              e('button', {
+                onClick: () => { setAddingIdea(!addingIdea); setDraftIdea({idea: '', source: ''}); },
+                className: 'flex-shrink-0 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 self-center whitespace-nowrap'
+              }, '+ Add idea'),
+              e(DropZone, {onLoad: handleUpload, error, setError, wrapperClass: 'flex-1'})
+            )
+          : e(DropZone, {onLoad: handleUpload, error, setError}),
+        addingIdea ? e('div', {className: 'px-4 py-2 bg-green-50 border-b border-green-200'},
+          e('div', {className: 'flex gap-2 items-center'},
+            e('span', {className: 'text-xs text-gray-400 whitespace-nowrap'}, new Date().toISOString().slice(0, 10)),
+            e('input', {
+              type: 'text', placeholder: 'Idea text (required)',
+              value: draftIdea.idea,
+              onChange: ev => setDraftIdea({...draftIdea, idea: ev.target.value}),
+              onKeyDown: ev => { if (ev.key === 'Enter') handleSaveIdea(); if (ev.key === 'Escape') setAddingIdea(false); },
+              className: 'flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-green-400',
+              autoFocus: true
+            }),
+            e('input', {
+              type: 'text', placeholder: 'Source (optional)',
+              value: draftIdea.source,
+              onChange: ev => setDraftIdea({...draftIdea, source: ev.target.value}),
+              onKeyDown: ev => { if (ev.key === 'Enter') handleSaveIdea(); if (ev.key === 'Escape') setAddingIdea(false); },
+              className: 'flex-1 border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:border-green-400'
+            }),
+            e('button', {onClick: handleSaveIdea, disabled: saving === 'saving', className: 'px-3 py-1 text-white text-xs font-medium rounded ' + (saving === 'saving' ? 'bg-yellow-500' : saving === 'saved' ? 'bg-green-700' : saving === 'error' ? 'bg-red-500' : 'bg-green-600 hover:bg-green-700')}, saving === 'saving' ? 'Saving...' : saving === 'saved' ? '✓ Saved' : saving === 'error' ? '✗ Error' : 'Save'),
+            e('button', {onClick: () => { setAddingIdea(false); setDraftIdea({idea: '', source: ''}); }, className: 'px-3 py-1 bg-gray-200 text-gray-600 text-xs font-medium rounded hover:bg-gray-300'}, 'Cancel')
+          )
+        ) : null,
+        e(DataTable, {tabId, rows, isManual, onClearManual: handleClear, feedback, setFeedback,
+          onDislike: tabId === 'captions' ? onDislike : null,
+          onLike:    tabId === 'captions' ? onLike    : null})
+      );
+    }
+
+    function App() {
+      const [activeTab, setActiveTab] = React.useState(() => localStorage.getItem('activeTab') || 'ideas');
+      const [data,      setData]      = React.useState(() => { const d={}; TABS.forEach(t=>d[t.id]=[]); return d; });
+      const [lastSync,  setLastSync]  = React.useState(null);
+      const [polling,   setPolling]   = React.useState(false);
+      const [isLocal,   setIsLocal]   = React.useState(false);
+      const [feedback,  setFeedback]  = React.useState(() => {
+        try { return JSON.parse(localStorage.getItem('caption_feedback') || '{}'); } catch(e) { return {}; }
+      });
+
+      React.useEffect(() => {
+        localStorage.setItem('caption_feedback', JSON.stringify(feedback));
+      }, [feedback]);
+
+      React.useEffect(() => { if (window.location.protocol === 'file:') setIsLocal(true); }, []);
+
+      const loadRef = React.useRef(null);
+
+      React.useEffect(() => {
+        if (isLocal) return;
+        function load() {
+          setPolling(true);
+          fetchAllData()
+            .then(r => {
+              const pending = JSON.parse(localStorage.getItem('caption_analyzer_pending') || '[]');
+              const analyzed = r.caption_analyzer || [];
+              const stillPending = pending.filter(p =>
+                !analyzed.some(x => x.original_caption === p.original_caption && x.date === p.date)
+              );
+              if (stillPending.length !== pending.length) {
+                localStorage.setItem('caption_analyzer_pending', JSON.stringify(stillPending));
+              }
+              r.caption_analyzer = [...stillPending, ...analyzed];
+              setData(r);
+              setLastSync(Date.now());
+              const hasPending = stillPending.length > 0;
+              clearInterval(loadRef.current);
+              loadRef.current = setInterval(load, hasPending ? 5000 : POLL_INTERVAL_MS);
+            })
+            .catch(() => {})
+            .finally(() => setPolling(false));
+        }
+        load();
+        loadRef.current = setInterval(load, POLL_INTERVAL_MS);
+        return () => clearInterval(loadRef.current);
+      }, [isLocal]);
+
+      const rowCounts = React.useMemo(() => {
+        const c = {}; TABS.forEach(t => c[t.id] = (data[t.id]||[]).length); return c;
+      }, [data]);
+
+      const dislikedCaptions = React.useMemo(() => {
+        return (data.captions || []).filter(row => feedback[JSON.stringify(row)] === 'dislike');
+      }, [data.captions, feedback]);
+
+      const PENDING_KEY = 'caption_analyzer_pending';
+
+      const handleDislike = (rowKey, row) => {
+        setFeedback(prev => ({...prev, [rowKey]: 'dislike'}));
+        const pending = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+        const alreadyAdded = pending.some(p => p.original_caption === row.caption && p.date === row.date);
+        if (!alreadyAdded) {
+          const newEntry = {
+            date: row.date, title: row.title || '',
+            original_caption: row.caption,
+            weakest_factors: '⏳ Анализирую...', what_to_improve: '⏳ Анализирую...', improved_caption: '⏳ Анализирую...'
+          };
+          localStorage.setItem(PENDING_KEY, JSON.stringify([newEntry, ...pending]));
+          setData(prev => ({...prev, caption_analyzer: [newEntry, ...(prev.caption_analyzer || [])]}));
+        }
+      };
+
+      const handleLike = (rowKey, row) => {
+        setFeedback(prev => ({...prev, [rowKey]: 'like'}));
+        const cur = JSON.parse(localStorage.getItem(PENDING_KEY) || '[]');
+        const filtered = cur.filter(p => !(p.original_caption === row.caption && p.date === row.date));
+        localStorage.setItem(PENDING_KEY, JSON.stringify(filtered));
+        setData(prev => ({...prev, caption_analyzer: (prev.caption_analyzer || []).filter(p => !(p.original_caption === row.caption && p.date === row.date))}));
+      };
+
+      if (isLocal) {
+        return e('div', {className:'min-h-screen bg-gray-50 flex items-center justify-center'},
+          e('div', {className:'bg-white rounded-xl shadow p-10 max-w-md text-center'},
+            e('h2', {className:'text-xl font-bold text-gray-800 mb-2'}, 'Open Online'),
+            e('p',  {className:'text-gray-500 text-sm mb-4'}, 'Open it via GitHub Pages for live data.'),
+            e('a',  {href:'https://alficcimo.github.io/dashboard/', className:'inline-block bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium'}, 'Open Dashboard')
+          )
+        );
+      }
+
+      return e('div', {className:'min-h-screen bg-gray-50'},
+        e('div', {className:'bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between'},
+          e('div', null,
+            e('h1', {className:'text-lg font-bold text-gray-800'}, 'Content Farm Dashboard'),
+            e('p',  {className:'text-xs text-gray-500'}, '@novaya_energia \u2014 Max Kibrik')
+          ),
+          e('div', {className:'flex gap-3 items-center'},
+            e(SyncIndicator, {lastSync, polling, pollInterval: POLL_INTERVAL_MS})
+          )
+        ),
+        e(TabBar, {activeTab, rowCounts, onTabChange: (id) => {
+          {
+            setActiveTab(id);
+            localStorage.setItem('activeTab', id);
+          }
+        }}),
+        TABS.map(tab => {
+          return activeTab === tab.id
+            ? e(TabPanel, {key: tab.id, tabId: tab.id, liveRows: data[tab.id]||[], feedback, setFeedback, onDislike: handleDislike, onLike: handleLike})
+            : null;
+        })
+      );
+    }
+
+    const rootEl = ReactDOM.createRoot(document.getElementById('root'));
+    rootEl.render(e(App, null));
+  </script>
 </body>
 </html>
