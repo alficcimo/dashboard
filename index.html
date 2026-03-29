@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Content Farm Dashboard</title>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <div id="root"></div>
+  <script>
+    const TABS = [
+      { id: 'ideas', label: 'Ideas', file: 'ideas.json' },
+      { id: 'analyzed', label: 'Analyzed', file: 'analyzed.json' },
+      { id: 'titles', label: 'Titles', file: 'titles.json' },
+      { id: 'captions', label: 'Captions', file: 'captions.json' },
+      { id: 'carousels', label: 'Carousels', file: 'carousels.json' }
+    ];
+
+    function App() {
+      const [activeTab, setActiveTab] = React.useState('ideas');
+      const [data, setData] = React.useState({});
+      const [loading, setLoading] = React.useState(true);
+
+      React.useEffect(() => {
+        const loadData = async () => {
+          const newData = {};
+          for (const tab of TABS) {
+            try {
+              const res = await fetch(`https://raw.githubusercontent.com/alficcimo/dashboard/main/${tab.file}`);
+              newData[tab.id] = res.ok ? await res.json() : [];
+            } catch (e) {
+              newData[tab.id] = [];
+            }
+          }
+          setData(newData);
+          setLoading(false);
+        };
+        loadData();
+        const interval = setInterval(loadData, 5000);
+        return () => clearInterval(interval);
+      }, []);
+
+      const rows = data[activeTab] || [];
+
+      return React.createElement('div', { className: 'min-h-screen bg-gray-50 p-8' },
+        React.createElement('h1', { className: 'text-4xl font-bold mb-8' }, 'Content Farm Dashboard'),
+        React.createElement('div', { className: 'flex gap-4 mb-8' },
+          TABS.map(tab =>
+            React.createElement('button', {
+              key: tab.id,
+              onClick: () => setActiveTab(tab.id),
+              className: `px-4 py-2 font-medium ${activeTab === tab.id ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'}`
+            }, `${tab.label} (${rows.length})`)
+          )
+        ),
+        loading ? React.createElement('div', { className: 'text-center text-gray-500' }, 'Loading...') :
+        React.createElement('div', { className: 'bg-white rounded-lg shadow p-8' },
+          rows.length === 0 ? 
+            React.createElement('div', { className: 'text-center text-gray-400 text-lg' }, 'No data') :
+            React.createElement('div', {}, rows.map((row, i) => React.createElement('div', { key: i, className: 'mb-4 p-4 border rounded' }, JSON.stringify(row))))
+        )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>
