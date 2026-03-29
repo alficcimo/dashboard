@@ -18,7 +18,7 @@
     // GitHub API config — replace with a fine-grained PAT (contents:write for alficcimo/dashboard only)
     const GITHUB_TOKEN = ['ghp_sLLEx0n','aUP1d6utkr7','lsdBxwlGuq4918VhVP'].join('');
     const GITHUB_REPO  = 'alficcimo/dashboard';
-    const IDEAS_FILE   = 'content-ideas.json';
+    const IDEAS_FILE   = 'ideas-finder.json';
 
     const GITHUB_BRANCH = 'main';
 
@@ -91,7 +91,7 @@
     // so the Caption Analyzer skill can pick it up without manual copy-paste
     async function pushDislikedCaptionToGitHub(row) {
       try {
-        const PENDING_FILE = 'content-caption-pending.json';
+        const PENDING_FILE = 'caption-analyzer-pending.json';
         const { sha, data: current } = await ghReadJSON(PENDING_FILE);
         const entry = {
           date: row.date || new Date().toISOString().slice(0,10),
@@ -123,12 +123,12 @@
     const EMBEDDED_DATA = {"ideas": [], "analyzed": [], "titles": [], "captions": [], "carousels": [], "improver": [], "captionAnalysis": [], "titleAnalyzer": [], "caption_analyzer": []};
 
     const TABS = [
-      { id: 'ideas',          label: 'Ideas',          file: 'content-ideas.json' },
-      { id: 'analyzed',       label: 'Analyzed',       file: 'content-analyzed.json' },
-      { id: 'titles',         label: 'Titles',         file: 'content-titles.json' },
-      { id: 'captions',       label: 'Captions',       file: 'content-captions.json' },
-      { id: 'carousels',      label: 'Carousels',      file: 'content-carousels.json' },
-      { id: 'caption_analyzer', label: 'Caption Analyzer', file: 'content-caption-analysis.json' },
+      { id: 'ideas',          label: 'Ideas',          file: 'ideas-finder.json' },
+      { id: 'analyzed',       label: 'Analyzed',       file: 'ideas-analyzer.json' },
+      { id: 'titles',         label: 'Titles',         file: 'titles.json' },
+      { id: 'captions',       label: 'Captions',       file: 'captions.json' },
+      { id: 'carousels',      label: 'Carousels',      file: 'carousels.json' },
+      { id: 'caption_analyzer', label: 'Caption Analyzer', file: 'caption-analyzer.json' },
     ];
     
     // Polling interval: configurable via URL parameter (?interval=5000), defaults to 30 seconds
