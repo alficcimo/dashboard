@@ -5,8 +5,8 @@
     "source": "https://www.marieclaire.ru/psychology/deiting-posle-terapii-pochemu-v-2026-godu-seksualno-byt-nemnogo-neprorabotannym/",
     "category": "Relationships",
     "discovered_at": "2026-03-29T21:44:40Z",
-    "status": "new",
-    "новые": true
+    "status": "analyzed",
+    "новые": false
   },
   {
     "date": "15.03.2026",
@@ -14,8 +14,8 @@
     "source": "https://www.psychologies.ru/standpoint/ya-dokaju-chto-tyi-mne-ne-nujen-kak-voznikaet-kontrzavisimost/",
     "category": "Psychology",
     "discovered_at": "2026-03-29T21:44:40Z",
-    "status": "new",
-    "новые": true
+    "status": "analyzed",
+    "новые": false
   },
   {
     "date": "20.03.2026",
@@ -23,7 +23,7 @@
     "source": "https://the-day.ru/psihologiya/7-stadii-vlyublennosti-v-2026-godu-pochemu-my-zastrevaem-na-vtoroi-i-boimsya-idti-dalshe/",
     "category": "Relationships",
     "discovered_at": "2026-03-29T21:44:40Z",
-    "status": "new",
-    "новые": true
+    "status": "analyzed",
+    "новые": false
   }
 ]
