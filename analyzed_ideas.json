@@ -1,0 +1,77 @@
+[
+  {
+    "date": "2026-03-29",
+    "idea": "Why people with anxiety actually make better leaders — they overthink risks others ignore completely",
+    "virality_score": 6.8,
+    "factors": {
+      "novelty": 7,
+      "emotional_trigger": 6,
+      "specificity": 6,
+      "contradiction": 8,
+      "psychology": 9,
+      "social_validation": 7,
+      "narrative_potential": 6,
+      "urgency": 5
+    },
+    "analysis": "Требует доработки. Вирусный потенциал 6.8/10.",
+    "accounts": [
+      "novaya_energia"
+    ],
+    "formats": [
+      "Reels",
+      "Carousel",
+      "Stories"
+    ],
+    "новые": true
+  },
+  {
+    "date": "2026-03-29",
+    "idea": "The biggest lie therapists tell: healing isn't linear, but most people expect it to be. That's why they give up.",
+    "virality_score": 6.1,
+    "factors": {
+      "novelty": 5,
+      "emotional_trigger": 8,
+      "specificity": 6,
+      "contradiction": 5,
+      "psychology": 7,
+      "social_validation": 7,
+      "narrative_potential": 6,
+      "urgency": 5
+    },
+    "analysis": "Требует доработки. Вирусный потенциал 6.1/10.",
+    "accounts": [
+      "novaya_energia"
+    ],
+    "formats": [
+      "Reels",
+      "Carousel",
+      "Stories"
+    ],
+    "новые": true
+  },
+  {
+    "date": "2026-03-29",
+    "idea": "Narcissists don't lack empathy — they have too much. They just point it all at themselves.",
+    "virality_score": 6.1,
+    "factors": {
+      "novelty": 5,
+      "emotional_trigger": 6,
+      "specificity": 6,
+      "contradiction": 5,
+      "psychology": 9,
+      "social_validation": 7,
+      "narrative_potential": 6,
+      "urgency": 5
+    },
+    "analysis": "Требует доработки. Вирусный потенциал 6.1/10.",
+    "accounts": [
+      "novaya_energia"
+    ],
+    "formats": [
+      "Reels",
+      "Carousel",
+      "Stories"
+    ],
+    "новые": true
+  }
+]
