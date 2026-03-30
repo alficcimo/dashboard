@@ -131,7 +131,7 @@
       };
 
       const rows    = data[activeTab] || [];
-      const columns = COLUMN_CONFIG[activeTab] || (rows.length > 0 ? Object.keys(rows[0]) : Object.keys(COLUMN_CONFIG));
+      const columns = COLUMN_CONFIG[activeTab] || [];
 
       const e = React.createElement;
 
@@ -189,7 +189,7 @@
 
         /* ── TABLE ── */
         e('div', { className: 'px-8 pb-8' },
-          e('div', { className: 'bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden' },
+          e('div', { className: 'bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden relative' },
             loading
               ? e('div', { className: 'flex items-center justify-center py-20 text-gray-400' },
                   e('span', {}, 'Loading...')
@@ -197,34 +197,34 @@
               : e('div', { className: 'overflow-x-auto' },
                   e('table', { className: 'w-full text-sm' },
                     e('thead', {},
-                      e('tr', { className: 'border-b border-gray-200' },
-                        e('th', { className: 'px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10' }, '#'),
+                      e('tr', { className: 'border-b border-gray-200 bg-gray-50' },
+                        e('th', { className: 'px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-10' }, '#'),
                         columns.map(col =>
-                          e('th', { key: col, className: 'px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider' }, col)
+                          e('th', { key: col, className: 'px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider' }, col)
                         )
                       )
                     ),
                     e('tbody', { className: 'divide-y divide-gray-100' },
-                      rows.map((row, i) =>
-                        e('tr', { key: i, className: 'group' },
-                          e('td', { className: 'px-4 py-3 text-gray-400 text-xs align-top' }, i + 1),
-                          columns.map(col =>
-                            e('td', {
-                              key: `${i}-${col}`,
-                              className: `px-4 py-3 text-gray-700 align-top ${LONG_COLUMNS.has(col) ? 'cell-long' : 'whitespace-nowrap'}`
-                            }, formatCellValue(row[col]))
+                      rows.length === 0
+                        ? e('tr', { className: 'hover:bg-gray-50' },
+                            e('td', { colSpan: columns.length + 1, className: 'px-4 py-8 text-center text-gray-400 text-sm' },
+                              'No data yet. Run the plugin to generate content.'
+                            )
                           )
-                        )
-                      )
+                        : rows.map((row, i) =>
+                            e('tr', { key: i, className: 'group hover:bg-gray-50' },
+                              e('td', { className: 'px-4 py-3 text-gray-400 text-xs align-top' }, i + 1),
+                              columns.map(col =>
+                                e('td', {
+                                  key: `${i}-${col}`,
+                                  className: `px-4 py-3 text-gray-700 align-top ${LONG_COLUMNS.has(col) ? 'cell-long' : 'whitespace-nowrap'}`
+                                }, formatCellValue(row[col]))
+                              )
+                            )
+                          )
                     )
                   )
                 )
-          )
-        ),
-
-        rows.length === 0 && e('div', { className: 'absolute inset-0 flex items-center justify-center bg-white bg-opacity-50 pointer-events-none' },
-          e('div', { className: 'text-center text-gray-500' },
-            e('p', { className: 'text-sm' }, 'No data yet. Run the plugin to generate content.')
           )
         )
       );
