@@ -37,15 +37,15 @@
     ];
 
     const COLUMN_CONFIG = {
-      ideas:              ['date', 'source', 'idea', 'status'],
-      analyzed:           ['date', 'idea', 'psychology', 'energy', 'king', 'magic_pill', 'status'],
-      titles:             ['date', 'title', 'angle', 'status'],
-      captions:           ['date', 'title', 'caption', 'platform', 'framework', 'status'],
-      carousels:          ['date', 'title', 'carousel', 'caption_under', 'status'],
-      'caption-analyzer': ['date', 'original_caption', 'weak_factors', 'improved_caption', 'status']
+      ideas:              ['date', 'source', 'idea'],
+      analyzed:           ['date', 'idea', 'psychology', 'energy', 'king', 'magic_pill', 'summary'],
+      titles:             ['date', 'title'],
+      captions:           ['date', 'title', 'caption'],
+      carousels:          ['date', 'title', 'carousel'],
+      'caption-analyzer': ['date', 'original_caption', 'weak_factors', 'improved_caption']
     };
 
-    const LONG_COLUMNS = new Set(['idea', 'caption', 'carousel', 'caption_under', 'psychology', 'energy', 'king', 'magic_pill', 'title', 'source']);
+    const LONG_COLUMNS = new Set(['idea', 'caption', 'carousel', 'psychology', 'energy', 'king', 'magic_pill', 'title', 'source', 'summary', 'original_caption', 'weak_factors', 'improved_caption']);
 
     function formatDate(val) {
       if (!val) return '';
@@ -217,7 +217,12 @@
                             e('td', {
                               key: `${i}-${col}`,
                               className: `px-4 py-3 text-gray-700 align-top ${LONG_COLUMNS.has(col) ? 'cell-long' : 'whitespace-nowrap'}`
-                            }, formatCellValue(col, row[col]))
+                            },
+                              formatCellValue(col, row[col]),
+                              col === 'date' && row['новые'] === true
+                                ? e('span', { style: { marginLeft: '6px', background: '#ef4444', color: 'white', padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '700', verticalAlign: 'middle', display: 'inline-block' } }, 'новые')
+                                : null
+                            )
                           )
                         )
                       )
