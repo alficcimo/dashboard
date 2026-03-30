@@ -131,7 +131,7 @@
       };
 
       const rows    = data[activeTab] || [];
-      const columns = COLUMN_CONFIG[activeTab] || (rows.length > 0 ? Object.keys(rows[0]) : []);
+      const columns = COLUMN_CONFIG[activeTab] || (rows.length > 0 ? Object.keys(rows[0]) : Object.keys(COLUMN_CONFIG));
 
       const e = React.createElement;
 
