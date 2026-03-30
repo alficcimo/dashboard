@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Content Farm Dashboard</title>
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
@@ -28,36 +31,25 @@
   <div id="root"></div>
   <script>
     const TABS = [
-      { id: 'ideas',           label: 'Ideas',           file: 'ideas.json' },
-      { id: 'analyzed',        label: 'Analyzed',        file: 'analyzed.json' },
-      { id: 'titles',          label: 'Titles',          file: 'titles.json' },
-      { id: 'captions',        label: 'Captions',        file: 'captions.json' },
-      { id: 'carousels',       label: 'Carousels',       file: 'carousels.json' },
-      { id: 'caption-analyzer', label: 'Caption Analyzer', file: 'caption-analyzer.json' }
+      { id: 'ideas',     label: 'Ideas',     file: 'ideas.json' },
+      { id: 'analyzed',  label: 'Analyzed',  file: 'analyzed.json' },
+      { id: 'titles',    label: 'Titles',    file: 'titles.json' },
+      { id: 'captions',  label: 'Captions',  file: 'captions.json' },
+      { id: 'carousels', label: 'Carousels', file: 'carousels.json' }
     ];
 
     const COLUMN_CONFIG = {
-      ideas:              ['date', 'source', 'idea'],
-      analyzed:           ['date', 'idea', 'psychology', 'energy', 'king', 'magic_pill', 'summary'],
-      titles:             ['date', 'title'],
-      captions:           ['date', 'title', 'caption'],
-      carousels:          ['date', 'title', 'carousel'],
-      'caption-analyzer': ['date', 'original_caption', 'weak_factors', 'improved_caption']
+      ideas:     ['date', 'source', 'idea'],
+      analyzed:  ['date', 'idea', 'psychology', 'energy', 'king', 'magic_pill'],
+      titles:    ['date', 'title', 'angle', 'status'],
+      captions:  ['date', 'title', 'caption', 'platform', 'framework', 'status'],
+      carousels: ['date', 'title', 'carousel', 'caption_under', 'status']
     };
 
-    const LONG_COLUMNS = new Set(['idea', 'caption', 'carousel', 'psychology', 'energy', 'king', 'magic_pill', 'title', 'source', 'summary', 'original_caption', 'weak_factors', 'improved_caption']);
+    const LONG_COLUMNS = new Set(['idea', 'caption', 'carousel', 'caption_under', 'psychology', 'energy', 'king', 'magic_pill', 'title', 'source']);
 
-    function formatDate(val) {
-      if (!val) return '';
-      // YYYY-MM-DD → DD.MM.YYYY
-      const m = String(val).match(/^(\d{4})-(\d{2})-(\d{2})/);
-      if (m) return `${m[3]}.${m[2]}.${m[1]}`;
-      return String(val);
-    }
-
-    function formatCellValue(col, val) {
+    function formatCellValue(val) {
       if (val === null || val === undefined) return '';
-      if (col === 'date') return formatDate(val);
       if (typeof val === 'boolean') return val ? 'Yes' : 'No';
       if (typeof val === 'object') return JSON.stringify(val, null, 2);
       return String(val);
@@ -75,8 +67,15 @@
         for (const tab of TABS) {
           try {
             const res = await fetch(
-              `https://alficcimo.github.io/dashboard/${tab.file}?t=${ts}`,
-              { cache: 'no-store' }
+              `https://raw.githubusercontent.com/alficcimo/dashboard/main/${tab.file}?t=${ts}`,
+              {
+                cache: 'no-store',
+                headers: {
+                  'Cache-Control': 'no-cache, no-store, must-revalidate',
+                  'Pragma': 'no-cache',
+                  'Expires': '0'
+                }
+              }
             );
             newData[tab.id] = res.ok ? await res.json() : [];
           } catch (e) {
@@ -217,12 +216,7 @@
                             e('td', {
                               key: `${i}-${col}`,
                               className: `px-4 py-3 text-gray-700 align-top ${LONG_COLUMNS.has(col) ? 'cell-long' : 'whitespace-nowrap'}`
-                            },
-                              formatCellValue(col, row[col]),
-                              col === 'date' && row['новые'] === true
-                                ? e('span', { style: { marginLeft: '6px', background: '#ef4444', color: 'white', padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '700', verticalAlign: 'middle', display: 'inline-block' } }, 'новые')
-                                : null
-                            )
+                            }, formatCellValue(row[col]))
                           )
                         )
                       )
