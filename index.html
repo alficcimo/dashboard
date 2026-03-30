@@ -62,6 +62,7 @@
       const [data, setData]           = React.useState({});
       const [loading, setLoading]     = React.useState(true);
       const [lastUpdate, setLastUpdate] = React.useState(null);
+      const [feedback, setFeedback]   = React.useState({});
 
       const loadData = React.useCallback(async () => {
         const newData = {};
@@ -136,6 +137,14 @@
       const rows    = data[activeTab] || [];
       const columns = COLUMN_CONFIG[activeTab] || [];
 
+      const handleFeedback = (rowIndex, feedbackType) => {
+        const key = `${activeTab}-${rowIndex}`;
+        setFeedback(prev => ({
+          ...prev,
+          [key]: feedbackType
+        }));
+      };
+
       const e = React.createElement;
 
       return e('div', { className: 'min-h-screen bg-gray-50' },
@@ -204,7 +213,8 @@
                         e('th', { className: 'px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-10' }, '#'),
                         columns.map(col =>
                           e('th', { key: col, className: 'px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider' }, col)
-                        )
+                        ),
+                        activeTab === 'captions' && e('th', { className: 'px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider' }, 'Feedback')
                       )
                     ),
                     e('tbody', { className: 'divide-y divide-gray-100' },
@@ -214,16 +224,31 @@
                               'No data yet. Run the plugin to generate content.'
                             )
                           )
-                        : rows.map((row, i) =>
-                            e('tr', { key: i, className: 'group hover:bg-gray-50' },
+                        : rows.map((row, i) => {
+                            const feedbackKey = `${activeTab}-${i}`;
+                            const rowFeedback = feedback[feedbackKey];
+                            return e('tr', { key: i, className: 'group hover:bg-gray-50' },
                               e('td', { className: 'px-4 py-3 text-gray-400 text-xs align-top' }, i + 1),
                               columns.map(col =>
                                 e('td', {
                                   key: `${i}-${col}`,
                                   className: `px-4 py-3 text-gray-700 align-top ${LONG_COLUMNS.has(col) ? 'cell-long' : 'whitespace-nowrap'}`
                                 }, formatCellValue(row[col]))
+                              ),
+                              activeTab === 'captions' && e('td', { className: 'px-4 py-3 text-sm align-top whitespace-nowrap' },
+                                e('div', { className: 'flex gap-2' },
+                                  e('button', {
+                                    onClick: () => handleFeedback(i, 'like'),
+                                    className: `px-3 py-1 rounded text-xs font-medium transition-colors ${rowFeedback === 'like' ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-gray-100 text-gray-600 hover:bg-green-50 border border-gray-200'}`
+                                  }, '👍 Like'),
+                                  e('button', {
+                                    onClick: () => handleFeedback(i, 'dislike'),
+                                    className: `px-3 py-1 rounded text-xs font-medium transition-colors ${rowFeedback === 'dislike' ? 'bg-red-100 text-red-700 border border-red-300' : 'bg-gray-100 text-gray-600 hover:bg-red-50 border border-gray-200'}`
+                                  }, '👎 Dislike')
+                                )
                               )
-                            )
+                            );
+                          }
                           )
                     )
                   )
