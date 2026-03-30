@@ -69,10 +69,11 @@
         for (const tab of TABS) {
           try {
             const res = await fetch(
-              `https://raw.githubusercontent.com/alficcimo/dashboard/main/${tab.file}?t=${ts}`,
+              `https://api.github.com/repos/alficcimo/dashboard/contents/${tab.file}?ref=main&t=${ts}`,
               {
                 cache: 'no-store',
                 headers: {
+                  'Accept': 'application/vnd.github.v3.raw',
                   'Cache-Control': 'no-cache, no-store, must-revalidate',
                   'Pragma': 'no-cache',
                   'Expires': '0'
