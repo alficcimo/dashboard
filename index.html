@@ -35,7 +35,8 @@
       { id: 'analyzed',  label: 'Analyzed',  file: 'analyzed.json' },
       { id: 'titles',    label: 'Titles',    file: 'titles.json' },
       { id: 'captions',  label: 'Captions',  file: 'captions.json' },
-      { id: 'carousels', label: 'Carousels', file: 'carousels.json' }
+      { id: 'carousels', label: 'Carousels', file: 'carousels.json' },
+      { id: 'caption-analyzer', label: 'Caption Analyzer', file: 'caption-analyzer.json' }
     ];
 
     const COLUMN_CONFIG = {
@@ -43,10 +44,11 @@
       analyzed:  ['date', 'idea', 'psychology', 'energy', 'king', 'magic_pill', 'summary'],
       titles:    ['date', 'title', 'angle', 'status'],
       captions:  ['date', 'title', 'caption', 'platform', 'framework', 'status'],
-      carousels: ['date', 'title', 'carousel', 'caption_under', 'status']
+      carousels: ['date', 'title', 'carousel', 'caption_under', 'status'],
+      'caption-analyzer': ['date', 'caption', 'hook_score', 'credibility_score', 'problem_clarity', 'cta_effectiveness', 'recommendation']
     };
 
-    const LONG_COLUMNS = new Set(['idea', 'caption', 'carousel', 'caption_under', 'psychology', 'energy', 'king', 'magic_pill', 'title', 'source']);
+    const LONG_COLUMNS = new Set(['idea', 'caption', 'carousel', 'caption_under', 'psychology', 'energy', 'king', 'magic_pill', 'title', 'source', 'recommendation']);
 
     function formatCellValue(val) {
       if (val === null || val === undefined) return '';
