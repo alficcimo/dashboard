@@ -67,16 +67,15 @@
 
       const loadData = React.useCallback(async () => {
         const newData = {};
-        const ts = new Date().getTime();
+        const ts = Date.now() + Math.random();
         for (const tab of TABS) {
           try {
             const res = await fetch(
-              `https://api.github.com/repos/alficcimo/dashboard/contents/${tab.file}?ref=main&t=${ts}`,
+              `https://raw.githubusercontent.com/alficcimo/dashboard/main/${tab.file}?cachebust=${ts}`,
               {
                 cache: 'no-store',
                 headers: {
-                  'Accept': 'application/vnd.github.v3.raw',
-                  'Cache-Control': 'no-cache, no-store, must-revalidate',
+                  'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
                   'Pragma': 'no-cache',
                   'Expires': '0'
                 }
