@@ -107,7 +107,7 @@
                 const loadData = async () => {
                     try {
                         setLoading(true);
-                        const files = ['ideas.json', 'analyzed_ideas.json', 'titles.json', 'captions.json', 'carousels.json', 'caption-analyzer.json'];
+                        const files = ['ideas.json', 'analyzed.json', 'titles.json', 'captions.json', 'carousels.json', 'caption-analyzer.json'];
                         const [ideas, analyzed, titles, captions, carousels, analyzer] = await Promise.all(
                             files.map(f => fetchGitHubFile(f))
                         );
