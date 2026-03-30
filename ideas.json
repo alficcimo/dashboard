@@ -6,7 +6,7 @@
     "category": "Relationships",
     "discovered_at": "2026-03-29T21:44:40Z",
     "status": "analyzed",
-    "новые": false
+    "новые": true
   },
   {
     "date": "15.03.2026",
@@ -15,7 +15,7 @@
     "category": "Psychology",
     "discovered_at": "2026-03-29T21:44:40Z",
     "status": "analyzed",
-    "новые": false
+    "новые": true
   },
   {
     "date": "20.03.2026",
@@ -24,6 +24,6 @@
     "category": "Relationships",
     "discovered_at": "2026-03-29T21:44:40Z",
     "status": "analyzed",
-    "новые": false
+    "новые": true
   }
 ]
