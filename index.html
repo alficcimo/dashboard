@@ -194,10 +194,6 @@
               ? e('div', { className: 'flex items-center justify-center py-20 text-gray-400' },
                   e('span', {}, 'Loading...')
                 )
-              : rows.length === 0
-              ? e('div', { className: 'flex items-center justify-center py-20 text-gray-400 text-sm' },
-                  'No data yet. Run the plugin to generate content.'
-                )
               : e('div', { className: 'overflow-x-auto' },
                   e('table', { className: 'w-full text-sm' },
                     e('thead', {},
@@ -223,6 +219,12 @@
                     )
                   )
                 )
+          )
+        ),
+
+        rows.length === 0 && e('div', { className: 'absolute inset-0 flex items-center justify-center bg-white bg-opacity-50 pointer-events-none' },
+          e('div', { className: 'text-center text-gray-500' },
+            e('p', { className: 'text-sm' }, 'No data yet. Run the plugin to generate content.')
           )
         )
       );
