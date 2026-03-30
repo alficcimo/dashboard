@@ -28,25 +28,36 @@
   <div id="root"></div>
   <script>
     const TABS = [
-      { id: 'ideas',     label: 'Ideas',     file: 'ideas.json' },
-      { id: 'analyzed',  label: 'Analyzed',  file: 'analyzed.json' },
-      { id: 'titles',    label: 'Titles',    file: 'titles.json' },
-      { id: 'captions',  label: 'Captions',  file: 'captions.json' },
-      { id: 'carousels', label: 'Carousels', file: 'carousels.json' }
+      { id: 'ideas',           label: 'Ideas',           file: 'ideas.json' },
+      { id: 'analyzed',        label: 'Analyzed',        file: 'analyzed.json' },
+      { id: 'titles',          label: 'Titles',          file: 'titles.json' },
+      { id: 'captions',        label: 'Captions',        file: 'captions.json' },
+      { id: 'carousels',       label: 'Carousels',       file: 'carousels.json' },
+      { id: 'caption-analyzer', label: 'Caption Analyzer', file: 'caption-analyzer.json' }
     ];
 
     const COLUMN_CONFIG = {
-      ideas:     ['date', 'source', 'idea', 'status'],
-      analyzed:  ['date', 'idea', 'psychology', 'energy', 'king', 'magic_pill', 'status'],
-      titles:    ['date', 'title', 'angle', 'status'],
-      captions:  ['date', 'title', 'caption', 'platform', 'framework', 'status'],
-      carousels: ['date', 'title', 'carousel', 'caption_under', 'status']
+      ideas:              ['date', 'source', 'idea', 'status'],
+      analyzed:           ['date', 'idea', 'psychology', 'energy', 'king', 'magic_pill', 'status'],
+      titles:             ['date', 'title', 'angle', 'status'],
+      captions:           ['date', 'title', 'caption', 'platform', 'framework', 'status'],
+      carousels:          ['date', 'title', 'carousel', 'caption_under', 'status'],
+      'caption-analyzer': ['date', 'original_caption', 'weak_factors', 'improved_caption', 'status']
     };
 
     const LONG_COLUMNS = new Set(['idea', 'caption', 'carousel', 'caption_under', 'psychology', 'energy', 'king', 'magic_pill', 'title', 'source']);
 
-    function formatCellValue(val) {
+    function formatDate(val) {
+      if (!val) return '';
+      // YYYY-MM-DD → DD.MM.YYYY
+      const m = String(val).match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return `${m[3]}.${m[2]}.${m[1]}`;
+      return String(val);
+    }
+
+    function formatCellValue(col, val) {
       if (val === null || val === undefined) return '';
+      if (col === 'date') return formatDate(val);
       if (typeof val === 'boolean') return val ? 'Yes' : 'No';
       if (typeof val === 'object') return JSON.stringify(val, null, 2);
       return String(val);
@@ -206,7 +217,7 @@
                             e('td', {
                               key: `${i}-${col}`,
                               className: `px-4 py-3 text-gray-700 align-top ${LONG_COLUMNS.has(col) ? 'cell-long' : 'whitespace-nowrap'}`
-                            }, formatCellValue(row[col]))
+                            }, formatCellValue(col, row[col]))
                           )
                         )
                       )
