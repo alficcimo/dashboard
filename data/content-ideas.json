@@ -1,1 +1,57 @@
-[]
+[
+  {
+    "id": "idea-1774862243496-1",
+    "idea": "How AI is reshaping business automation workflows in 2026",
+    "source": "Industry trends - Business automation",
+    "category": "Technology & Business",
+    "relevance_score": 9.2,
+    "discovered_at": "2026-03-30T12:17:23.496285Z",
+    "status": "pending_analysis",
+    "raw_source": "trending_topics",
+    "discovery_source_category": "Current trending topics across social platforms"
+  },
+  {
+    "id": "idea-1774862243496-2",
+    "idea": "The rise of personal AI coaches for employee development",
+    "source": "Emerging trends - HR Tech",
+    "category": "Employee Training",
+    "relevance_score": 8.7,
+    "discovered_at": "2026-03-30T12:17:23.496285Z",
+    "status": "pending_analysis",
+    "raw_source": "emerging_trends",
+    "discovery_source_category": "Emerging trends in SaaS, online courses, digital products"
+  },
+  {
+    "id": "idea-1774862243496-3",
+    "idea": "Gamification strategies that actually drive user engagement",
+    "source": "Viral patterns analysis - Social media",
+    "category": "Product Strategy",
+    "relevance_score": 8.9,
+    "discovered_at": "2026-03-30T12:17:23.496285Z",
+    "status": "pending_analysis",
+    "raw_source": "viral_patterns",
+    "discovery_source_category": "Viral content patterns from TikTok, Instagram, YouTube"
+  },
+  {
+    "id": "idea-1774862243496-4",
+    "idea": "Building communities around online transformational experiences",
+    "source": "Audience pain points - Community building",
+    "category": "Community & Engagement",
+    "relevance_score": 8.5,
+    "discovered_at": "2026-03-30T12:17:23.496285Z",
+    "status": "pending_analysis",
+    "raw_source": "audience_pain_points",
+    "discovery_source_category": "Common challenges in business & personal development"
+  },
+  {
+    "id": "idea-1774862243496-5",
+    "idea": "Leveraging short-form video for B2B thought leadership",
+    "source": "Viral patterns - LinkedIn & YouTube Shorts",
+    "category": "Content Marketing",
+    "relevance_score": 9.0,
+    "discovered_at": "2026-03-30T12:17:23.496285Z",
+    "status": "pending_analysis",
+    "raw_source": "viral_patterns",
+    "discovery_source_category": "Viral content patterns from TikTok, Instagram, YouTube"
+  }
+]
