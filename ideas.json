@@ -1,29 +1,29 @@
 [
-    {
-        "date":  "29.03.2026",
-        "idea":  "ÐžÐ½ Ð¸ÑÑ‡ÐµÐ·Ð°ÐµÑ‚ â€” Ñ‚Ñ‹ Ð¶Ð°Ð´Ð¸ÑˆÑŒ. Ð¢Ñ‹ Ð¶Ð°Ð´Ð¸ÑˆÑŒ â€” Ð¾Ð½ Ð²Ð¾Ð·Ð²Ñ€Ð°Ñ‰Ð°ÐµÑ‚ÑÑ. Ð­Ñ‚Ð¾ Ð½Ðµ Ð»ÑŽÐ±Ð¾Ð²ÑŒ, ÑÑ‚Ð¾ Ð´Ñ€ÐµÑÑÐ¸Ñ€Ð¾Ð²ÐºÐ°.",
-        "source":  "https://www.psychologies.ru/standpoint/proval-uspeshnogo-svidaniya-chem-on-vyizvan/",
-        "category":  "Psychology",
-        "discovered_at":  "2026-04-02T11:15:00Z",
-        "status":  "new",
-        "Ð½Ð¾Ð²Ñ‹Ðµ":  true
-    },
-    {
-        "date":  "27.03.2026",
-        "idea":  "Ð¢Ñ‹ Ð¿Ð¾ÐºÑƒÐ¿Ð°ÐµÑˆÑŒ Ð¸Ð»Ð»ÑŽÐ·Ð¸ÑŽ Ñ‚Ð¾Ð³Ð¾, Ñ‡Ñ‚Ð¾ ÑÐ¼Ð¾Ð¶ÐµÑˆÑŒ ÐµÐ³Ð¾ ÑÐ¾Ð³Ñ€ÐµÑ‚ÑŒ. ÐÐ¾ Ð¾Ð½ Ñ…Ð¾Ð»Ð¾Ð´ÐµÐ½ Ð½Ðµ Ð¿Ð¾Ñ‚Ð¾Ð¼Ñƒ, Ñ‡Ñ‚Ð¾ Ð·Ð°Ð¼Ñ‘Ñ€Ð· â€” Ð¾Ð½ Ñ…Ð¾Ð»Ð¾Ð´ÐµÐ½, Ð¿Ð¾Ñ‚Ð¾Ð¼Ñƒ Ñ‡Ñ‚Ð¾ ÐµÐ¼Ñƒ Ñ‚Ð°Ðº ÑƒÐ´Ð¾Ð±Ð½ÐµÐµ.",
-        "source":  "https://www.mostimes.com/articles/cycle-in-relationships/29392/",
-        "category":  "Relationships",
-        "discovered_at":  "2026-04-02T11:15:00Z",
-        "status":  "new",
-        "Ð½Ð¾Ð²Ñ‹Ðµ":  true
-    },
-    {
-        "date":  "31.03.2026",
-        "idea":  "Ð¡Ð»Ð¸ÑÐ½Ð¸Ðµ Ð² Ð¾Ñ‚Ð½Ð¾ÑˆÐµÐ½Ð¸ÑÑ… â€” ÑÑ‚Ð¾ Ð½Ðµ Ð±Ð»Ð¸Ð·Ð¾ÑÑ‚ÑŒ, ÑÑ‚Ð¾ ÑÐ¾Ð·Ð°Ð²Ð¸ÑÐ¸Ð¼Ð¾ÑÑ‚ÑŒ. Ð—Ð´Ð¾Ñ€Ð¾Ð²Ð°Ñ Ð»ÑŽÐ±Ð¾Ð²ÑŒ â€” ÑÑ‚Ð¾ Ð´Ð²Ð° ÑÐ°Ð¼Ð¾ÑÑ‚Ð¾ÑÑ‚ÐµÐ»ÑŒÐ½Ñ‹Ñ… Ñ‡ÐµÐ»Ð¾Ð²ÐµÐºÐ°, ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ðµ Ð²Ñ‹Ð±Ð¸Ñ€Ð°ÑŽÑ‚ Ð´Ñ€ÑƒÐ³ Ð´Ñ€ÑƒÐ³Ð° ÐºÐ°Ð¶Ð´Ñ‹Ð¹ Ð´ÐµÐ½ÑŒ.",
-        "source":  "https://www.psychologies.ru/articles/gde-prolegayut-granitsyi-v-zdorovyih-otnosheniyah-i-kak-ih-stroit/",
-        "category":  "Personal Development",
-        "discovered_at":  "2026-04-02T11:15:00Z",
-        "status":  "new",
-        "Ð½Ð¾Ð²Ñ‹Ðµ":  true
-    }
+  {
+    "date": "29.03.2026",
+    "idea": "Он исчезает — ты жадишь. Ты жадишь — он возвращается. Это не любовь, это дрессировка.",
+    "source": "https://www.psychologies.ru/standpoint/proval-uspeshnogo-svidaniya-chem-on-vyizvan/",
+    "category": "Psychology",
+    "discovered_at": "2026-04-02T11:15:00Z",
+    "status": "new",
+    "новые": true
+  },
+  {
+    "date": "27.03.2026",
+    "idea": "Ты покупаешь иллюзию того, что сможешь его согреть. Но он холоден не потому, что замёрз — он холоден, потому что ему так удобнее.",
+    "source": "https://www.mostimes.com/articles/cycle-in-relationships/29392/",
+    "category": "Relationships",
+    "discovered_at": "2026-04-02T11:15:00Z",
+    "status": "new",
+    "новые": true
+  },
+  {
+    "date": "31.03.2026",
+    "idea": "Слияние в отношениях — это не близость, это созависимость. Здоровая любовь — это два самостоятельных человека, которые выбирают друг друга каждый день.",
+    "source": "https://www.psychologies.ru/articles/gde-prolegayut-granitsyi-v-zdorovyih-otnosheniyah-i-kak-ih-stroit/",
+    "category": "Personal Development",
+    "discovered_at": "2026-04-02T11:15:00Z",
+    "status": "new",
+    "новые": true
+  }
 ]
