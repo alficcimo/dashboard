@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="force-145114" />
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
-  <meta http-equiv="Pragma" content="force-145114" />
-  <meta http-equiv="Expires" content="force-145114" />
-  <meta name="version" content="force-145114" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" /> />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="version" content="deploy-1775129508" />
   <title>Content Farm Dashboard</title>
   <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
@@ -21,7 +21,6 @@
              font-size: 11px; font-weight: 600; }
     .badge-active { background: #3b82f6; color: white; }
     .badge-inactive { background: #e5e7eb; color: #6b7280; }
-    .badge-new { background: #22c55e; color: white; font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-left: 6px; font-weight: 700; vertical-align: middle; }
     tr:hover td { background: #f9fafb; }
     .cell-long { max-width: 420px; white-space: pre-wrap; word-break: break-word; line-height: 1.5; }
     .upload-area { border: 2px dashed #d1d5db; border-radius: 8px; cursor: pointer; }
@@ -32,14 +31,12 @@
 <body class="bg-gray-50 min-h-screen">
   <div id="root"></div>
   <script>
-    const RAW_BASE = './';
-
     const TABS = [
-      { id: 'ideas',            label: 'Ideas',            file: 'ideas-finder.json' },
-      { id: 'analyzed',         label: 'Analyzed',         file: 'ideas-analyzer.json' },
-      { id: 'titles',           label: 'Titles',           file: 'titles.json' },
-      { id: 'captions',         label: 'Captions',         file: 'captions.json' },
-      { id: 'carousels',        label: 'Carousels',        file: 'carousels.json' },
+      { id: 'ideas',     label: 'Ideas',     file: 'ideas.json' },
+      { id: 'analyzed',  label: 'Analyzed',  file: 'analyzed.json' },
+      { id: 'titles',    label: 'Titles',    file: 'titles.json' },
+      { id: 'captions',  label: 'Captions',  file: 'captions.json' },
+      { id: 'carousels', label: 'Carousels', file: 'carousels.json' },
       { id: 'caption-analyzer', label: 'Caption Analyzer', file: 'caption-analyzer.json' }
     ];
 
@@ -54,25 +51,11 @@
 
     const LONG_COLUMNS = new Set(['idea', 'caption', 'carousel', 'caption_under', 'psychology', 'energy', 'king', 'magic_pill', 'title', 'source', 'recommendation', 'improved_caption']);
 
-    const TODAY = new Date().toISOString().slice(0, 10);
-
     function formatCellValue(val) {
       if (val === null || val === undefined) return '';
       if (typeof val === 'boolean') return val ? 'Yes' : 'No';
       if (typeof val === 'object') return JSON.stringify(val, null, 2);
       return String(val);
-    }
-
-    function renderDateCell(val) {
-      const e = React.createElement;
-      const str = formatCellValue(val);
-      if (str === TODAY) {
-        return e('span', {},
-          str,
-          e('span', { className: 'badge-new' }, 'Новые')
-        );
-      }
-      return str;
     }
 
     function App() {
@@ -85,26 +68,29 @@
       const loadData = React.useCallback(async () => {
         const newData = {};
         const ts = Date.now();
-        await Promise.all(TABS.map(async (tab) => {
+        for (const tab of TABS) {
           try {
-            // GitHub API — bypasses CDN cache entirely, always fresh
             const res = await fetch(
-              `https://api.github.com/repos/alficcimo/dashboard/contents/${tab.file}?ref=main&_=${ts}`,
-              { cache: 'no-store', headers: { 'Accept': 'application/vnd.github.v3+json' } }
+              `https://api.github.com/repos/alficcimo/dashboard/contents/${tab.file}?ref=main&t=${ts}`,
+              {
+                cache: 'no-store',
+                headers: {
+                  'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+                  'Pragma': 'no-cache',
+                  'Expires': '0'
+                }
+              }
             );
             if (res.ok) {
-              const json = await res.json();
-              try { newData[tab.id] = JSON.parse(atob(json.content.replace(/\n/g, ''))); } catch { newData[tab.id] = []; }
+              const data = await res.json();
+              newData[tab.id] = data.content ? JSON.parse(atob(data.content)) : [];
             } else {
-              // fallback to Pages URL
-              const r2 = await fetch(`${RAW_BASE}${tab.file}?t=${ts}`, { cache: 'no-store' });
-              if (r2.ok) { try { newData[tab.id] = await r2.json(); } catch { newData[tab.id] = []; } }
-              else newData[tab.id] = [];
+              newData[tab.id] = [];
             }
           } catch (e) {
             newData[tab.id] = [];
           }
-        }));
+        }
         setData(newData);
         setLoading(false);
         setLastUpdate(new Date().toLocaleTimeString());
@@ -252,7 +238,7 @@
                                 e('td', {
                                   key: `${i}-${col}`,
                                   className: `px-4 py-3 text-gray-700 align-top ${LONG_COLUMNS.has(col) ? 'cell-long' : 'whitespace-nowrap'}`
-                                }, col === 'date' ? renderDateCell(row[col]) : formatCellValue(row[col]))
+                                }, formatCellValue(row[col]))
                               ),
                               activeTab === 'captions' ? e('td', { className: 'px-4 py-3 text-sm align-top whitespace-nowrap' },
                                 e('div', { className: 'flex gap-2' },
