@@ -31,12 +31,14 @@
 <body class="bg-gray-50 min-h-screen">
   <div id="root"></div>
   <script>
+    const RAW_BASE = 'https://raw.githubusercontent.com/alficcimo/dashboard/main/';
+
     const TABS = [
-      { id: 'ideas',     label: 'Ideas',     file: 'ideas.json' },
-      { id: 'analyzed',  label: 'Analyzed',  file: 'analyzed.json' },
-      { id: 'titles',    label: 'Titles',    file: 'titles.json' },
-      { id: 'captions',  label: 'Captions',  file: 'captions.json' },
-      { id: 'carousels', label: 'Carousels', file: 'carousels.json' },
+      { id: 'ideas',            label: 'Ideas',            file: 'ideas-finder.json' },
+      { id: 'analyzed',         label: 'Analyzed',         file: 'ideas-analyzer.json' },
+      { id: 'titles',           label: 'Titles',           file: 'titles.json' },
+      { id: 'captions',         label: 'Captions',         file: 'captions.json' },
+      { id: 'carousels',        label: 'Carousels',        file: 'carousels.json' },
       { id: 'caption-analyzer', label: 'Caption Analyzer', file: 'caption-analyzer.json' }
     ];
 
@@ -67,30 +69,30 @@
 
       const loadData = React.useCallback(async () => {
         const newData = {};
-        const ts = Date.now();
-        for (const tab of TABS) {
+        const ts = Date.now() + Math.random();
+        await Promise.all(TABS.map(async (tab) => {
           try {
             const res = await fetch(
-              `https://api.github.com/repos/alficcimo/dashboard/contents/${tab.file}?ref=main&t=${ts}`,
+              `${RAW_BASE}${tab.file}?nocache=${ts}`,
               {
                 cache: 'no-store',
                 headers: {
                   'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
                   'Pragma': 'no-cache',
-                  'Expires': '0'
+                  'Expires': '-1'
                 }
               }
             );
             if (res.ok) {
-              const data = await res.json();
-              newData[tab.id] = data.content ? JSON.parse(atob(data.content)) : [];
+              const text = await res.text();
+              try { newData[tab.id] = JSON.parse(text); } catch { newData[tab.id] = []; }
             } else {
               newData[tab.id] = [];
             }
           } catch (e) {
             newData[tab.id] = [];
           }
-        }
+        }));
         setData(newData);
         setLoading(false);
         setLastUpdate(new Date().toLocaleTimeString());
